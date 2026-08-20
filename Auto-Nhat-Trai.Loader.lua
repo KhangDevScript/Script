@@ -4,6 +4,7 @@ local player = game.Players.LocalPlayer
 local workspace = game:GetService("Workspace")
 local httpservice = game:GetService("HttpService")
 local teleportservice = game:GetService("TeleportService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
 
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
@@ -57,6 +58,27 @@ task.spawn(function()
     end
 end)
 
+-- Hàm tự động cất trái cây vào kho
+local function storeFruits()
+    pcall(function()
+        local remotes = replicatedStorage:FindFirstChild("Remotes")
+        if remotes and remotes:FindFirstChild("CommF_") then
+            for _, item in ipairs(player.Backpack:GetChildren()) do
+                if item:IsA("Tool") and (string.find(item.Name, "Fruit") or item.Name:match(".*Fruit.*")) then
+                    remotes.CommF_:InvokeServer("StoreFruit", item.Name)
+                end
+            end
+            if player.Character then
+                for _, item in ipairs(player.Character:GetChildren()) do
+                    if item:IsA("Tool") and (string.find(item.Name, "Fruit") or item.Name:match(".*Fruit.*")) then
+                        remotes.CommF_:InvokeServer("StoreFruit", item.Name)
+                    end
+                end
+            end
+        end
+    end)
+end
+
 local function hopServer()
     StatusLabel.Text = "No fruit, Load new server"
     task.wait(1.5)
@@ -92,17 +114,18 @@ end
 local function checkAndCollectFruit()
     local foundFruit = false
     pcall(function()
-        -- Quét cả workspace và thư mục con để bắt trái cây chuẩn hơn
         for _, obj in ipairs(workspace:GetDescendants()) do
             if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
                 if string.find(obj.Name, "Fruit") or obj.Name:match(".*Fruit.*") then
                     foundFruit = true
-                    StatusLabel.Text = "Found Fruit: " .. obj.Name
+                    StatusLabel.Text = "Found & Storing: " .. obj.Name
                     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                         player.Character.HumanoidRootPart.CFrame = obj.Handle.CFrame
                         task.wait(0.5)
                         firetouchinterest(player.Character.HumanoidRootPart, obj.Handle, 0)
                         firetouchinterest(player.Character.HumanoidRootPart, obj.Handle, 1)
+                        task.wait(1)
+                        storeFruits() -- Cất vào kho ngay lập tức sau khi nhặt
                     end
                 end
             end
