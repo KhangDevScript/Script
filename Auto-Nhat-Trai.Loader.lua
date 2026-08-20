@@ -61,7 +61,7 @@ end)
 local function autoJoinPirates()
     task.spawn(function()
         while task.wait(1) do
-            local success = pcall(function()
+            pcall(function()
                 local mainGui = player.PlayerGui:FindFirstChild("Main")
                 if mainGui then
                     local chooseTeam = mainGui:FindFirstChild("ChooseTeam")
@@ -72,12 +72,12 @@ local function autoJoinPirates()
                     end
                 end
             end)
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            pcall(function()
                 local mainGui = player.PlayerGui:FindFirstChild("Main")
-                if mainGui and not mainGui:FindFirstChild("ChooseTeam") or (mainGui:FindFirstChild("ChooseTeam") and not mainGui.ChooseTeam.Visible) then
+                if mainGui and not mainGui:FindFirstChild("ChooseTeam") then
                     break
                 end
-            end
+            end)
         end
     end)
 end
@@ -117,12 +117,14 @@ local function checkAndCollectFruit()
             if obj:IsA("Tool") and obj:FindFirstChild("Handle") and string.find(obj.Name, "Fruit") then
                 found = true
                 StatusLabel.Text = "Found: " .. obj.Name
-                player.Character.HumanoidRootPart.CFrame = obj.Handle.CFrame
-                task.wait(0.5)
-                firetouchinterest(player.Character.HumanoidRootPart, obj.Handle, 0)
-                firetouchinterest(player.Character.HumanoidRootPart, obj.Handle, 1)
-                task.wait(1)
-                storeFruits()
+                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    player.Character.HumanoidRootPart.CFrame = obj.Handle.CFrame
+                    task.wait(0.5)
+                    firetouchinterest(player.Character.HumanoidRootPart, obj.Handle, 0)
+                    firetouchinterest(player.Character.HumanoidRootPart, obj.Handle, 1)
+                    task.wait(1)
+                    storeFruits()
+                end
             end
         end
     end)
@@ -130,13 +132,18 @@ local function checkAndCollectFruit()
 end
 
 task.spawn(function()
-    task.wait(2)
     autoJoinPirates()
     
-    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    task.wait(3)
-    
-    if not checkAndCollectFruit() then
-        hopServer()
+    while task.wait(1) do
+        StatusLabel.Text = "Checking server for fruits..."
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            if not checkAndCollectFruit() then
+                task.wait(2)
+                if not checkAndCollectFruit() then
+                    hopServer()
+                    break
+                end
+            end
+        end
     end
 end)
