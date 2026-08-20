@@ -15,30 +15,38 @@ local StatusLabel = Instance.new("TextLabel")
 
 ScreenGui.Name = "KhangDevFruitGUI"
 ScreenGui.Parent = game.CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.Position = UDim2.new(0.05, 0, 0.1, 0)
 MainFrame.Size = UDim2.new(0, 280, 0, 110)
+
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
+
 UIStroke.Name = "RainbowStroke"
 UIStroke.Parent = MainFrame
 UIStroke.Thickness = 3
 
 TitleLabel.Parent = MainFrame
 TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 0, 0, 10)
 TitleLabel.Size = UDim2.new(1, 0, 0, 30)
+TitleLabel.Font = Enum.Font.SourceSansBold
 TitleLabel.Text = "KHANG DEV SCRIPT"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 20
 
 StatusLabel.Parent = MainFrame
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.Position = UDim2.new(0, 10, 0, 50)
 StatusLabel.Size = UDim2.new(1, -20, 0, 45)
-StatusLabel.Text = "Initializing..."
+StatusLabel.Font = Enum.Font.SourceSans
+StatusLabel.Text = "Checking..."
 StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatusLabel.TextSize = 14
 StatusLabel.TextWrapped = true
 
 task.spawn(function()
@@ -52,52 +60,47 @@ end)
 
 local function autoJoinPirates()
     pcall(function()
-        if not player:FindFirstChild("PlayerGui"):FindFirstChild("Main") then return end
-        local chooseTeam = player.PlayerGui.Main:FindFirstChild("ChooseTeam")
-        if chooseTeam and chooseTeam.Enabled then
-            local remotes = replicatedStorage:FindFirstChild("Remotes")
-            if remotes and remotes:FindFirstChild("CommF_") then
-                remotes.CommF_:InvokeServer("SetTeam", "Pirates")
-            end
+        if player.PlayerGui:FindFirstChild("Main") and player.PlayerGui.Main:FindFirstChild("ChooseTeam") then
+            replicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
         end
     end)
 end
 
 local function storeFruits()
     pcall(function()
-        local remotes = replicatedStorage:FindFirstChild("Remotes")
-        if remotes and remotes:FindFirstChild("CommF_") then
-            for _, item in ipairs(player.Backpack:GetChildren()) do
-                if item:IsA("Tool") and (string.find(item.Name, "Fruit") or item.Name:match(".*Fruit.*")) then
-                    remotes.CommF_:InvokeServer("StoreFruit", item.Name)
-                end
+        for _, item in ipairs(player.Backpack:GetChildren()) do
+            if item:IsA("Tool") and string.find(item.Name, "Fruit") then
+                replicatedStorage.Remotes.CommF_:InvokeServer("StoreFruit", item.Name)
             end
         end
     end)
 end
 
 local function hopServer()
-    StatusLabel.Text = "No fruit, Load new server"
-    local servers = {}
-    local success, req = pcall(function() return game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100") end)
-    if success and req then
-        local body = httpservice:JSONDecode(req)
-        for _, s in ipairs(body.data) do
-            if s.playing < s.maxPlayers and s.id ~= game.JobId then table.insert(servers, s.id) end
+    StatusLabel.Text = "No fruit, hopping..."
+    while task.wait(1) do
+        local success, req = pcall(function() return game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100") end)
+        if success and req then
+            local body = httpservice:JSONDecode(req)
+            for _, s in ipairs(body.data) do
+                if s.playing < s.maxPlayers and s.id ~= game.JobId then
+                    StatusLabel.Text = "Found server, teleporting..."
+                    teleportservice:TeleportToPlaceInstance(game.PlaceId, s.id, player)
+                    task.wait(10)
+                end
+            end
         end
-    end
-    if #servers > 0 then
-        teleportservice:TeleportToPlaceInstance(game.PlaceId, servers[math.random(1, #servers)], player)
+        StatusLabel.Text = "Server full, searching again..."
     end
 end
 
 local function checkAndCollectFruit()
-    local foundFruit = false
+    local found = false
     pcall(function()
         for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("Tool") and obj:FindFirstChild("Handle") and (string.find(obj.Name, "Fruit") or obj.Name:match(".*Fruit.*")) then
-                foundFruit = true
-                StatusLabel.Text = "Found & Storing: " .. obj.Name
+            if obj:IsA("Tool") and obj:FindFirstChild("Handle") and string.find(obj.Name, "Fruit") then
+                found = true
+                StatusLabel.Text = "Found: " + obj.Name
                 player.Character.HumanoidRootPart.CFrame = obj.Handle.CFrame
                 task.wait(0.5)
                 firetouchinterest(player.Character.HumanoidRootPart, obj.Handle, 0)
@@ -107,7 +110,7 @@ local function checkAndCollectFruit()
             end
         end
     end)
-    return foundFruit
+    return found
 end
 
 task.spawn(function()
