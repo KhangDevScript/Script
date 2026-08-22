@@ -1,5 +1,5 @@
 -- =====================================================
--- PART 1: LOADING SCREEN (Mochii Scripts)
+-- PART 1: LOADING SCREEN (Khang_Dev Scripts)
 -- =====================================================
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -131,7 +131,7 @@ chanName.Size = UDim2.new(1, -16, 0, 24)
 chanName.AnchorPoint = Vector2.new(0.5, 0)
 chanName.Position = UDim2.new(0.5, 0, 0, 92)
 chanName.BackgroundTransparency = 1
-chanName.Text = "Mochii Scripts"
+chanName.Text = "Khang_Dev Scripts"
 chanName.Font = Enum.Font.GothamBlack
 chanName.TextSize = 19
 chanName.TextColor3 = Color3.fromRGB(255, 255, 255) -- Pure White Text
@@ -142,7 +142,7 @@ chanHandle.Size = UDim2.new(1, -20, 0, 28)
 chanHandle.AnchorPoint = Vector2.new(0.5, 0)
 chanHandle.Position = UDim2.new(0.5, 0, 0, 115)
 chanHandle.BackgroundTransparency = 1
-chanHandle.Text = "📺 Subscribe first to unlock script\nafter loading finishes!"
+chanHandle.Text = "Subscribe first to unlock script\nafter loading finishes!"
 chanHandle.Font = Enum.Font.GothamBold
 chanHandle.TextSize = 11
 chanHandle.TextColor3 = Color3.fromRGB(210, 210, 210) -- Light Gray
@@ -170,7 +170,7 @@ scriptTag.Size = UDim2.new(1, -20, 0, 20)
 scriptTag.AnchorPoint = Vector2.new(0.5, 0)
 scriptTag.Position = UDim2.new(0.5, 0, 0, 152)
 scriptTag.BackgroundTransparency = 1
-scriptTag.Text = "⚡ SCRIPT LOADING ⚡"
+scriptTag.Text = "⚡ SCRIPT MADE BY KHANG_DEV ⚡"
 scriptTag.Font = Enum.Font.GothamBold
 scriptTag.TextSize = 13
 scriptTag.TextColor3 = Color3.fromRGB(255, 255, 255) -- White Text
@@ -192,22 +192,22 @@ statusLabel.Size = UDim2.new(1, -20, 0, 16)
 statusLabel.AnchorPoint = Vector2.new(0.5, 0)
 statusLabel.Position = UDim2.new(0.5, 0, 0, 174)
 statusLabel.BackgroundTransparency = 1
-statusLabel.Text = "⚙️ Initializing modules..."
+statusLabel.Text = "⚙️ Bypass modules..."
 statusLabel.Font = Enum.Font.GothamBold
 statusLabel.TextSize = 11
 statusLabel.TextColor3 = Color3.fromRGB(255, 75, 75) -- Red Text
 statusLabel.ZIndex = 22
 
 local msgs = {
-    "⚙️ Initializing modules...",
+    "⚙️ Bypass anti-cheat...",
     "📡 Loading remote functions...",
     "🛡️ Bypassing detection layers...",
     "🔄 Fetching latest patches...",
     "🌐 Connecting to servers...",
-    "💉 Injecting exploit hooks...",
+    "💉 Injecting exploit now...",
     "🔍 Verifying script integrity...",
     "🔥 Warming up features...",
-    "🚀 Almost ready..."
+    "🚀 Inject game!..."
 }
 
 task.spawn(function()
@@ -293,7 +293,7 @@ tRow.ZIndex = 22
 local timerL = Instance.new("TextLabel", tRow)
 timerL.Size = UDim2.fromScale(0.5, 1)
 timerL.BackgroundTransparency = 1
-timerL.Text = "⏳ 02:00"
+timerL.Text = "⏳ 00:10"
 timerL.Font = Enum.Font.GothamBold
 timerL.TextSize = 11
 timerL.TextColor3 = Color3.fromRGB(255, 255, 255) -- White Timer
@@ -352,7 +352,7 @@ ver.Size = UDim2.new(1, -16, 0, 14)
 ver.AnchorPoint = Vector2.new(0.5, 0)
 ver.Position = UDim2.new(0.5, 0, 0, 252)
 ver.BackgroundTransparency = 1
-ver.Text = "🔓 unlocking script..."
+ver.Text = "🔓 Unlocker script..."
 ver.Font = Enum.Font.Gotham
 ver.TextSize = 10
 ver.TextColor3 = Color3.fromRGB(160, 160, 160) -- Light Gray
@@ -387,7 +387,7 @@ task.spawn(function()
 end)
 
 -- SMOOTH MAIN LOADING
-local LOAD_TIME = 120 -- Seconds
+local LOAD_TIME = 10 -- Seconds
 TweenService:Create(iBar2, TweenInfo.new(LOAD_TIME, Enum.EasingStyle.Linear), { Size = UDim2.fromScale(1, 1) }):Play()
 TweenService:Create(tip, TweenInfo.new(LOAD_TIME, Enum.EasingStyle.Linear), { Position = UDim2.fromScale(0.99, 0.5) }):Play()
 
@@ -417,7 +417,7 @@ local GET_KEY_LINK = "https://discord.gg/mozil" -- Link na mako-copy sa Get Key
 
 -- Parent UI Setup
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KeySystemUI"
+ScreenGui.Name = "KeyUI"
 ScreenGui.ResetOnSpawn = false
 
 -- Fallback UI parent (Studio / Executor support)
@@ -584,7 +584,7 @@ ContinueBtn.MouseButton1Click:Connect(function()
         -- Dito ilagay ang totoong script mo
         print("Key system passed!")
     else
-        ContinueBtn.Text = "Invalid Key!"
+        ContinueBtn.Text = "Security Key!"
         ContinueBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
         task.wait(1.5)
         ContinueBtn.Text = "Continue"
