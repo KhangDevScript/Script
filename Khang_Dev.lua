@@ -207,7 +207,7 @@ local msgs = {
     "💉 Injecting exploit now...",
     "🔍 Verifying script integrity...",
     "🔥 Warming up features...",
-    "🚀 Inject game!..."
+    "🚀 Success!..."
 }
 
 task.spawn(function()
@@ -412,7 +412,7 @@ pcall(function() gui:Destroy() end)
 -- =====================================================
 
 -- Settings
-local CORRECT_KEY = "MochiiScriptsKey" -- Palitan mo ng tamang key mo
+local CORRECT_KEY = "Khang_DevKey" -- Palitan mo ng tamang key mo
 local GET_KEY_LINK = "https://discord.gg/mozil" -- Link na mako-copy sa Get Key
 
 -- Parent UI Setup
@@ -480,7 +480,7 @@ SubtitleLabel.Name = "SubtitleLabel"
 SubtitleLabel.Size = UDim2.new(1, -60, 0, 18)
 SubtitleLabel.Position = UDim2.new(0, 42, 0, 42)
 SubtitleLabel.BackgroundTransparency = 1
-SubtitleLabel.Text = "Enter key to unlock."
+SubtitleLabel.Text = "Enter the key"
 SubtitleLabel.TextColor3 = Color3.fromRGB(120, 120, 145)
 SubtitleLabel.TextSize = 13
 SubtitleLabel.Font = Enum.Font.Gotham
