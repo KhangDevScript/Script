@@ -1,13 +1,3 @@
-Since I cannot generate a direct download link, here is the raw text of the file.
-
-How to download it:
-
-Copy the code block below.
-Open Notepad (Windows) or TextEdit (Mac).
-Paste the code.
-Save the file as Khang_Dev_Menu.txt (or Khang_Dev_Menu.html to view it in a browser).
-📄 Copy this content:
-Copy
 <!DOCTYPE html>
 <html lang="en">
 <head>
