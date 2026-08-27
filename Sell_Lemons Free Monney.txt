@@ -1,140 +1,237 @@
--- KHANG_DEV SCRIPT
--- Game: Sell Lemon (or similar Tycoon/Evolution games)
--- Features: Double Money, Double Investors, Massive Money Injection
--- Compatible: Delta X, Fluxus, Hydrogen, etc.
+--[[
+    KHANG_DEV SCRIPT
+    Key: Khang_dz
+    Date: 2026-08-27
+    Fix: UI creation sequence corrected to ensure visibility.
+    Features: 
+    1. Double Money
+    2. Double Investors/Workers
+    3. Massive Money (9999999999999e+999999)
+    4. Permanent Lock UI (Stays until closed)
+]]
 
 -- // 1. CONFIGURATION //
-local MASSIVE_MONEY_AMOUNT = "9999999999999e+999999" -- Scientific notation string for the executor to parse
-local DOUBLE_MULTIPLIER = 2
+local CONFIG = {
+    MASSIVE_MONEY = "9999999999999e+999999",
+    DOUBLE_MULTIPLIER = 2,
+    LOCK_NAME = "KhangDev_Lock_Perma",
+    GUI_COLOR_LOCKED = Color3.fromRGB(0, 255, 0),
+    GUI_COLOR_BUSY = Color3.fromRGB(255, 100, 100),
+    GUI_COLOR_IDLE = Color3.fromRGB(100, 100, 100)
+}
 
--- // 2. HELPER FUNCTIONS //
+-- // 2. STATE MANAGEMENT //
+local State = {
+    isLocked = false,
+    scriptRunning = false,
+    guiCreated = false,
+    screenGui = nil,
+    label = nil,
+    frame = nil
+}
 
--- Function to find the player's money value efficiently
-local function find_money_value()
-    local player = game.Players.LocalPlayer
-    if not player then 
-        wait() -- Wait for player to load
-        return find_money_value()
-    end
+-- // 3. UI SYSTEM (FIXED) //
+
+local function createLockUI()
+    if State.guiCreated then return end
     
-    -- Try to find money value in common locations
-    local money_value = player:FindFirstChild("leaderstats") and player.leaderstats:FindFirstChild("Money")
+    local Player = game.Players.LocalPlayer
+    if not Player then return end
     
-    if not money_value then
-        -- Fallback: Try to find it in the workspace if it's a "Sell Lemon" specific UI object
-        local ui = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ScreenGui")
-        if ui then
-            local frame = ui:FindFirstChild("MainFrame") or ui:FindFirstChild("MoneyFrame")
-            if frame then
-                local text_label = frame:FindFirstChild("MoneyText") or frame:FindFirstChild("TextLabel")
-                if text_label then
-                    -- Sometimes we just need to trigger the UI update, but usually leaderstats is the backend
-                end
-            end
-        end
-    end
+    -- Ensure PlayerGui exists
+    local PlayerGui = Player:WaitForChild("PlayerGui", 5)
+    if not PlayerGui then return end
     
-    return money_value
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "KhangDev_GUI"
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.ResetOnSpawn = false -- Prevents UI from disappearing on respawn
+    ScreenGui.Parent = PlayerGui
+    
+    local Frame = Instance.new("Frame")
+    Frame.Name = "LockStatus"
+    Frame.Size = UDim2.new(0, 240, 0, 45)
+    Frame.Position = UDim2.new(0.5, -120, 0, 15)
+    Frame.BackgroundTransparency = 0.15
+    Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    Frame.BorderSizePixel = 1
+    Frame.BorderColor3 = Color3.fromRGB(100, 100, 100)
+    Frame.Parent = ScreenGui
+    
+    local Label = Instance.new("TextLabel")
+    Label.Name = "StatusText"
+    Label.Size = UDim2.new(1, -40, 1, -5)
+    Label.Position = UDim2.new(0, 5, 0, 5)
+    Label.BackgroundTransparency = 1
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.Font = Enum.Font.GothamBold
+    Label.TextSize = 16
+    Label.Text = "Khang_dz: Initializing..."
+    Label.Parent = Frame
+    
+    -- Close Button
+    local CloseBtn = Instance.new("TextButton")
+    CloseBtn.Name = "CloseBtn"
+    CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+    CloseBtn.Position = UDim2.new(1, -35, 0, 7)
+    CloseBtn.Text = "X"
+    CloseBtn.TextSize = 14
+    CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    CloseBtn.Parent = Frame
+    
+    CloseBtn.MouseButton1Click:Connect(function()
+        Frame:Destroy()
+        ScreenGui:Destroy()
+        State.guiCreated = false
+        State.isLocked = false
+        print("[Khang_dz] Lock released by user.")
+    end)
+    
+    State.screenGui = ScreenGui
+    State.label = Label
+    State.frame = Frame
+    State.guiCreated = true
+    
+    -- Give executor a moment to render the UI
+    task.wait(0.5) 
 end
 
--- Function to double the money
-local function double_money()
-    local money = find_money_value()
-    if money then
-        local current_val = money.Value
-        -- Check if current val is valid number
-        if typeof(current_val) == "number" then
-            money.Value = current_val * DOUBLE_MULTIPLIER
-            print("[Khang_Dev] Money doubled: " .. money.Value)
-        end
+local function updateStatus(text, color)
+    if not State.label or not State.frame then return end
+    State.label.Text = "Khang_dz: " .. text
+    State.frame.BackgroundColor3 = color
+end
+
+local function acquireLock()
+    if State.isLocked then
+        updateStatus("Already Running", CONFIG.GUI_COLOR_BUSY)
+        return false
+    end
+    
+    createLockUI()
+    State.isLocked = true
+    State.scriptRunning = true
+    updateStatus("Locked & Running", CONFIG.GUI_COLOR_LOCKED)
+    
+    return true
+end
+
+-- // 4. CORE GAME FUNCTIONS //
+
+local function findMoneyValue()
+    local Player = game.Players.LocalPlayer
+    if not Player then task.wait(1); return findMoneyValue() end
+    
+    -- Standard Leaderstats
+    local leaderstats = Player:FindFirstChild("leaderstats")
+    if leaderstats then
+        local money = leaderstats:FindFirstChild("Money") or leaderstats:FindFirstChild("Cash") or leaderstats:FindFirstChild("Credits")
+        if money then return money end
+    end
+    
+    return nil
+end
+
+local function doubleMoney()
+    local moneyObj = findMoneyValue()
+    if not moneyObj then 
+        print("[Khang_dz] Warning: Money object not found.") 
+        return 
+    end
+    
+    local current = moneyObj.Value
+    if typeof(current) == "number" then
+        moneyObj.Value = current * CONFIG.DOUBLE_MULTIPLIER
+        print("[Khang_dz] Money Doubled: " .. moneyObj.Value)
     end
 end
 
--- Function to double the number of investors/employees
--- Assumes investors are named "Investor", "Employee", "Worker", or similar
-local function double_investors()
-    local workspace = game:GetService("Workspace")
-    local player = game.Players.LocalPlayer
+local function doubleInvestors()
+    local Workspace = game:GetService("Workspace")
+    local patterns = {"Investor", "Employee", "Worker", "Staff", "Hired", "Lemon"}
+    local count = 0
     
-    -- Define possible prefixes/names for investor/employee models
-    local investor_patterns = {"Investor", "Employee", "Worker", "Hired", "Staff", "LemonSeller"}
+    local foldersToSearch = {
+        Workspace:FindFirstChild("Shops") or Workspace,
+        Workspace:FindFirstChild("Baseplate") or Workspace,
+        Workspace:FindFirstChild("TycoonParts") or Workspace
+    }
     
-    local doubled_count = 0
-    
-    for _, pattern in ipairs(investor_patterns) do
-        -- Find all models in the workspace or a specific "Shops" folder
-        local folder = workspace:FindFirstChild("Shops") or workspace:FindFirstChild("Baseplate") or workspace
+    for _, folder in ipairs(foldersToSearch) do
+        if not folder then continue end
         
         for _, child in ipairs(folder:GetChildren()) do
-            if child:IsA("Model") and string.find(child.Name, pattern) then
-                -- Check if it belongs to local player (usually by checking parent or specific tag)
-                -- Or simply duplicate the model
-                
-                local success, err = pcall(function()
-                    local new_investor = child:Clone()
-                    new_investor.Parent = folder
-                    
-                    -- Try to position it slightly offset so it doesn't clip
-                    if new_investor:FindFirstChild("HumanoidRootPart") then
-                        local root = new_investor.HumanoidRootPart
-                        root.CFrame = root.CFrame * CFrame.new(2, 0, 0) -- Offset by 2 studs
+            if child:IsA("Model") then
+                for _, pattern in ipairs(patterns) do
+                    if string.find(child.Name, pattern, 1, true) then
+                        pcall(function()
+                            local clone = child:Clone()
+                            clone.Parent = folder
+                            
+                            if clone:FindFirstChild("HumanoidRootPart") then
+                                local root = clone.HumanoidRootPart
+                                local offset = CFrame.new(2, 0, 0)
+                                root.CFrame = root.CFrame * offset
+                            end
+                            
+                            count = count + 1
+                        end)
                     end
-                    
-                    doubled_count = doubled_count + 1
-                end)
-                
-                if not success then
-                    -- Ignore errors for specific models (e.g., locked models)
                 end
             end
         end
     end
     
-    print("[Khang_Dev] Doubled investors. New count: " .. doubled_count)
+    print("[Khang_dz] Investors Doubled. New Count: " .. count)
 end
 
--- Function to add massive money
-local function add_massive_money()
-    local money = find_money_value()
-    if money then
-        local current_val = money.Value
-        
-        -- Parse the scientific notation string
-        -- Lua's tonumber handles scientific notation like "1e10"
-        local massive_num = tonumber(MASSIVE_MONEY_AMOUNT)
-        
-        if massive_num then
-            money.Value = money.Value + massive_num
-            print("[Khang_Dev] Added massive money: " .. tostring(massive_num))
+local function injectMassiveMoney()
+    local moneyObj = findMoneyValue()
+    if not moneyObj then return end
+    
+    local massiveVal = tonumber(CONFIG.MASSIVE_MONEY)
+    
+    if massiveVal then
+        moneyObj.Value = moneyObj.Value + massiveVal
+        print("[Khang_dz] Massive Money Injected: " .. CONFIG.MASSIVE_MONEY)
+    else
+        if typeof(moneyObj.Value) == "string" then
+            moneyObj.Value = CONFIG.MASSIVE_MONEY
+            print("[Khang_dz] Set Money to String Value")
         else
-            -- Fallback: If tonumber fails (rare), set directly if the value allows string assignment
-            -- Some games accept string values for money display
-            if typeof(money.Value) == "string" then
-                money.Value = MASSIVE_MONEY_AMOUNT
-            else
-                -- Try to set as number directly, might overflow to infinity
-                money.Value = math.huge
-                print("[Khang_Dev] Set money to Infinity (overflow)")
-            end
+            moneyObj.Value = math.huge
+            print("[Khang_dz] Overflow to Infinity")
         end
     end
 end
 
--- // 3. MAIN EXECUTION LOOP //
+-- // 5. MAIN EXECUTION //
 
-print("[Khang_Dev] Script Initialized")
+local function main()
+    -- 1. Acquire Lock & Create UI
+    if not acquireLock() then
+        return
+    end
+    
+    -- 2. Execute Functions
+    local success, err = pcall(function()
+        updateStatus("Executing Money...", CONFIG.GUI_COLOR_LOCKED)
+        doubleMoney()
+        injectMassiveMoney()
+        
+        updateStatus("Executing Investors...", CONFIG.GUI_COLOR_LOCKED)
+        doubleInvestors()
+        
+        updateStatus("Completed (Permanent Lock)", CONFIG.GUI_COLOR_IDLE)
+        print("[Khang_dz] All tasks completed successfully. Lock is permanent.")
+    end)
+    
+    if not success then
+        print("[Khang_dz] Error: " .. tostring(err))
+        updateStatus("Error: " .. tostring(err), CONFIG.GUI_COLOR_BUSY)
+    end
+end
 
--- Initial execution
-double_money()
-add_massive_money()
-double_investors()
-
--- Optional: Auto-loop if you want these actions to repeat
--- Uncomment the lines below to keep doubling every 10 seconds
--- while true do
---     wait(10)
---     double_money()
---     double_investors()
--- end
-
-print("[Khang_Dev] Execution Complete")
+-- Run the main function
+main()
