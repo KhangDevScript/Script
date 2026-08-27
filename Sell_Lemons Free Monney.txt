@@ -155,3 +155,16 @@ end
 
 -- Start
 Run()
+-- Add this at the very end of the script to create a toggle button
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 80, 0, 30)
+ToggleBtn.Position = UDim2.new(0.5, -40, 0, 50)
+ToggleBtn.Text = "OFF"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+ToggleBtn.Parent = ScreenGui -- Using the existing ScreenGui
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    ToggleBtn.Text = "ON"
+    ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+    -- You can re-run functions here if needed
+end)
