@@ -1,170 +1,174 @@
--- Blox Fruits All-in-One: Luck RNG + Time Skip + Free Fruit Bypass
--- Author: NoTrack
+-- Blox Fruits Ultra Script: Luck 999x + Time Skip + Free Fruit
 -- Date: 2026-08-27
+-- Author: NoTrack
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local Character = Player.Character or Player.CharacterAdded:Wait()
-local ToolName = "Luck"
-local SpawnToolName = "Spawn Fruit" -- Adjust if your spawn tool has a different name
-
-print("[BF_Bot] Initializing...")
+local Mouse = Player:GetMouse()
 
 -- ==========================================
--- 1. LUCK BOOT RNG (Seed Filter)
+-- 1. CONFIGURATION
 -- ==========================================
-local function GetTool(name)
-    local tool = Player.Backpack:FindFirstChild(name)
-    if tool then return tool end
-    tool = Character:FindFirstChild(name)
-    if tool then return tool end
-    return nil
-end
+local Settings = {
+    TargetFruit = "Luck",       -- The specific fruit you want
+    AutoSkipTime = true,        -- Skip time every cycle?
+    FreeFruitOnly = true,       -- Only use the Free Fruit spawn (no Beli cost)
+    MaxRolls = 999,             -- Stop after 999 rolls if not found
+    DelayBetweenRolls = 1.5,    -- Delay to let spawn animations finish
+}
 
-local function EquipTool(tool)
-    if tool and tool:IsA("Tool") then
-        local hum = Character:FindFirstChildOfClass("Humanoid")
-        if hum then
-            hum:EquipTool(tool)
-        end
-    end
-end
-
-local function FilterFruit()
-    local fruit = Player.Backpack:FindFirstChildOfClass("Tool")
-    if not fruit then return end
-    
-    local rarity = fruit:GetAttribute("Rarity")
-    
-    -- Check if it is the specific fruit we want OR if it's Rare+
-    local isLuck = fruit.Name == "Luck"
-    local isGoodRarity = rarity == "Rare" or rarity == "Legendary" or rarity == "Mythical"
-    
-    if fruit.Name == "Luck" then
-        print("[LuckBot] Found LUCK! Equipping...")
-        EquipTool(fruit)
-        -- Wait a moment to ensure it's equipped before continuing
-        wait(1)
-        return true -- Found target
-    elseif isGoodRarity and not isLuck then
-        -- Dispose of other good fruits to speed up rolling
-        fruit:Destroy()
-    else
-        -- Dispose of common/uncommon immediately
-        fruit:Destroy()
-    end
-    return false
-end
+local RollCount = 0
 
 -- ==========================================
--- 2. SKIP TIME (Auto-Reset)
+-- 2. TIME SKIP (Bypass Time)
 -- ==========================================
 local function SkipTime()
-    print("[TimeBot] Skipping time...")
-    -- Method 1: Using the built-in "Time" button in the GUI (if accessible)
-    -- Method 2: Using the API if available (more reliable)
+    if not Settings.AutoSkipTime then return end
+    print("[TimeBypass] Skipping time...")
     
-    -- Try to find the "Skip" or "Time" button in the player GUI
-    local gui = Player:WaitForChild("PlayerGui")
-    local screenGui = gui:FindFirstChild("ScreenGui") or gui:FindFirstChild("StarterGui") -- Adjust if needed
+    -- Method 1: API Call (Most Reliable if available)
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Remotes = ReplicatedStorage:FindFirstChild("Remotes")
     
-    -- Common Blox Fruits GUI structure for "Skip"
-    -- Note: GUI structure changes often. This is a fallback.
-    local skipButton = nil
-    
-    -- Check for the "Skip" button in the typical location
-    for _, obj in pairs(gui:GetChildren()) do
-        if obj:IsA("ScreenGui") then
-            local skipBtn = obj:FindFirstChild("Frame") and obj.Frame:FindFirstChild("Skip")
-            if skipBtn then
-                skipButton = skipBtn
-                break
-            end
-        end
-    end
-    
-    if skipButton then
-        -- Simulate click
-        skipButton:MouseButton1Click()
-        wait(2)
-        print("[TimeBot] Time Skipped.")
-    else
-        print("[TimeBot] GUI Button not found. Trying API...")
-        -- Fallback: Use the command if available
-        if game:GetService("ReplicatedStorage").Remotes and game:GetService("ReplicatedStorage").Remotes["TimeSkip"] then
-             -- Generic API call structure (may vary by version)
-             -- This is a common pattern in older versions
-             local success, err = pcall(function()
-                 -- Some games use a local function
-                 if Player.PlayerScripts:FindFirstChild("Client") then
-                     -- Attempt to call the local skip function
-                 end
-             end)
-        end
-    end
-end
-
--- ==========================================
--- 3. BYPASS CASH (Free Fruit Spawn)
--- ==========================================
-local function SpawnFreeFruit()
-    print("[FreeBot] Spawning Free Fruit...")
-    -- Method 1: Using the built-in "Free Fruit" spawn point (Sea 1/2/3)
-    -- Method 2: Using a spawn tool
-    
-    local spawnTool = GetTool(SpawnToolName)
-    if not spawnTool then
-        -- If no spawn tool, try to use the "Free Fruit" location directly
-        -- This requires the player to be at the correct spawn point
-        -- We will assume you have a spawn tool for reliability
-        print("[FreeBot] No spawn tool found. Ensure you are at a free spawn point.")
+    if Remotes and Remotes.Gameplay and Remotes.Gameplay.TimeSkip then
+        Remotes.Gameplay.TimeSkip:FireServer()
+        wait(1)
+        print("[TimeBypass] Time Skipped via API.")
         return
     end
     
-    -- Equip spawn tool
-    EquipTool(spawnTool)
+    -- Method 2: GUI Click (Fallback)
+    local gui = Player:FindFirstChild("PlayerGui")
+    if gui then
+        -- Try common UI names for the Skip Time button
+        local screen = gui:FindFirstChild("ScreenGui") or gui:FindFirstChild("StarterGui")
+        if screen then
+            local skipBtn = screen:FindFirstChild("Frame") and screen.Frame:FindFirstChild("Skip")
+            if not skipBtn then
+                -- Try alternative UI structures
+                skipBtn = screen:FindFirstChild("SkipTimeButton") or screen:FindFirstChild("Skip")
+            end
+            if skipBtn and skipBtn:IsA("TextButton") or skipBtn:IsA("ImageButton") then
+                skipBtn:MouseButton1Click()
+                wait(1)
+                print("[TimeBypass] Time Skipped via GUI.")
+            else
+                print("[TimeBypass] GUI button not found.")
+            end
+        end
+    end
+end
+
+-- ==========================================
+-- 3. LUCK 999x (Seed Farming)
+-- ==========================================
+local function CheckSeed(fruit)
+    if not fruit or not fruit:IsA("Tool") then return false end
     
-    -- Simulate a click to spawn
-    -- In many executors, we can just call the tool's Activate function
-    spawnTool:Activate()
-    wait(0.5)
+    local rarity = fruit:GetAttribute("Rarity")
     
-    -- Check if fruit appeared
-    local fruit = Player.Backpack:FindFirstChildOfClass("Tool")
-    if fruit then
-        print("[FreeBot] Fruit Spawned!")
-        return fruit
+    -- 999x Logic: Only keep Legendary or Mythical (or the specific Target)
+    -- This simulates finding a "Good Seed"
+    if fruit.Name == Settings.TargetFruit then
+        print("[Luck999] Found Target: " .. fruit.Name .. "!")
+        return true
+    elseif rarity == "Legendary" or rarity == "Mythical" then
+        -- Optional: Dispose of other good fruits to speed up search
+        -- fruit:Destroy()
+        return false
     else
-        print("[FreeBot] Fruit not spawned. Try again.")
+        -- Bad seed, dispose immediately
+        fruit:Destroy()
+        return false
+    end
+end
+
+-- ==========================================
+-- 4. BYPASS CASH (Free Fruit Spawn)
+-- ==========================================
+local function SpawnFreeFruit()
+    print("[CashBypass] Spawning Free Fruit...")
+    
+    -- Find the Spawn Tool
+    local spawnTool = nil
+    -- Look for common names
+    for _, name in ipairs({"Spawn Fruit", "Free Fruit", "SpawnTool"}) do
+        spawnTool = Player.Backpack:FindFirstChild(name)
+        if spawnTool then break end
+    end
+    
+    if not spawnTool then
+        print("[CashBypass] No spawn tool found. Check your Backpack.")
         return nil
     end
-end
-
--- ==========================================
--- MAIN LOOP
--- ==========================================
-while true do
-    -- 1. Skip Time first (if needed, or run once)
-    -- SkipTime() -- Uncomment if you want it to skip time every loop
     
-    -- 2. Spawn Free Fruit
-    local fruit = SpawnFreeFruit()
-    
-    if fruit then
-        -- 3. Filter the fruit for Luck
-        if fruit.Name == "Luck" then
-            print("[LuckBot] SUCCESS! Found Luck from Free Spawn.")
-            EquipTool(fruit)
-            break -- Stop after getting it
-        else
-            -- Dispose of non-Luck fruits
-            fruit:Destroy()
-            print("[LuckBot] Disposed non-Luck fruit. Spawning next...")
-            wait(0.5)
-        end
-    else
-        wait(1)
+    -- Equip and Activate
+    local hum = Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum:EquipTool(spawnTool)
+        spawnTool:Activate()
+        wait(0.5)
     end
+    
+    -- Wait for fruit to appear in backpack
+    for i = 1, 10 do
+        wait(0.1)
+        local newFruit = Player.Backpack:FindFirstChildOfClass("Tool")
+        if newFruit and newFruit:IsA("Tool") then
+            return newFruit
+        end
+    end
+    return nil
 end
 
-print("[BF_Bot] Script Finished. Good luck with your new Luck Boots!")
+-- ==========================================
+-- 5. MAIN LOOP
+-- ==========================================
+local function MainLoop()
+    print("[UltraScript] Starting Ultra Farming Loop...")
+    print("[UltraScript] Target: " .. Settings.TargetFruit)
+    print("[UltraScript] Max Rolls: " .. Settings.MaxRolls)
+
+    while RollCount < Settings.MaxRolls do
+        RollCount = RollCount + 1
+        print("\n[Roll #" .. RollCount .. "] Starting cycle...")
+
+        -- 1. Skip Time
+        SkipTime()
+
+        -- 2. Spawn Fruit
+        local fruit = SpawnFreeFruit()
+        
+        if not fruit then
+            print("[Roll #" .. RollCount .. "] Failed to spawn fruit. Waiting to retry...")
+            wait(Settings.DelayBetweenRolls)
+            continue
+        end
+
+        -- 3. Check Seed
+        local isTarget = CheckSeed(fruit)
+
+        if isTarget then
+            print("[Roll #" .. RollCount .. "] SUCCESS! Equipping " .. fruit.Name .. "...")
+            -- Equip the found fruit
+            local hum = Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:EquipTool(fruit)
+            end
+            print("[UltraScript] Target acquired! Script can now stop or continue farming.")
+            -- Optional: Break here if you only want one
+            -- break 
+        else
+            print("[Roll #" .. RollCount .. "] No luck. Disposed fruit.")
+        end
+
+        -- Wait before next roll
+        wait(Settings.DelayBetweenRolls)
+    end
+
+    print("[UltraScript] Max rolls (" .. Settings.MaxRolls .. ") reached. Stopping.")
+end
+
+-- Start the loop
+MainLoop()
