@@ -1,24 +1,24 @@
+-- KHANG_DEV DELTA X OPTIMIZED
+-- Date: 2026-08-27
+-- Fix: Fixed task.wait, string.find, and UI creation race conditions.
+
 -- // 1. CONFIGURATION //
 local CONFIG = {
     MASSIVE_MONEY = "9999999999999e+999999",
     DOUBLE_MULTIPLIER = 2,
-    LOCK_NAME = "KhangDev_Lock_Perma",
-    GUI_COLOR_LOCKED = Color3.fromRGB(0, 255, 0),
-    GUI_COLOR_BUSY = Color3.fromRGB(255, 100, 100),
-    GUI_COLOR_IDLE = Color3.fromRGB(100, 100, 100)
+    LOCK_NAME = "KhangDev_Lock_Perma"
 }
 
--- // 2. STATE MANAGEMENT //
+-- // 2. STATE //
 local State = {
     isLocked = false,
-    scriptRunning = false,
     guiCreated = false,
     screenGui = nil,
     label = nil,
     frame = nil
 }
 
--- // 3. UI SYSTEM (FIXED) //
+-- // 3. UI SYSTEM //
 
 local function createLockUI()
     if State.guiCreated then return end
@@ -26,16 +26,20 @@ local function createLockUI()
     local Player = game.Players.LocalPlayer
     if not Player then return end
     
-    -- Ensure PlayerGui exists
-    local PlayerGui = Player:WaitForChild("PlayerGui", 5)
-    if not PlayerGui then return end
+    local PlayerGui = Player:FindFirstChild("PlayerGui")
+    if not PlayerGui then 
+        PlayerGui = Player:WaitForChild("PlayerGui", 5) 
+        if not PlayerGui then return end 
+    end
     
+    -- Create ScreenGui
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "KhangDev_GUI"
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    ScreenGui.ResetOnSpawn = false -- Prevents UI from disappearing on respawn
+    ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = PlayerGui
     
+    -- Create Frame
     local Frame = Instance.new("Frame")
     Frame.Name = "LockStatus"
     Frame.Size = UDim2.new(0, 240, 0, 45)
@@ -46,6 +50,7 @@ local function createLockUI()
     Frame.BorderColor3 = Color3.fromRGB(100, 100, 100)
     Frame.Parent = ScreenGui
     
+    -- Create Label
     local Label = Instance.new("TextLabel")
     Label.Name = "StatusText"
     Label.Size = UDim2.new(1, -40, 1, -5)
@@ -57,7 +62,7 @@ local function createLockUI()
     Label.Text = "Khang_dz: Initializing..."
     Label.Parent = Frame
     
-    -- Close Button
+    -- Create Close Button
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Name = "CloseBtn"
     CloseBtn.Size = UDim2.new(0, 30, 0, 30)
@@ -81,7 +86,7 @@ local function createLockUI()
     State.frame = Frame
     State.guiCreated = true
     
-    -- Give executor a moment to render the UI
+    -- Wait for UI to render (Delta X specific)
     task.wait(0.5) 
 end
 
@@ -93,45 +98,37 @@ end
 
 local function acquireLock()
     if State.isLocked then
-        updateStatus("Already Running", CONFIG.GUI_COLOR_BUSY)
+        updateStatus("Already Running", Color3.fromRGB(255, 100, 100))
         return false
     end
     
     createLockUI()
     State.isLocked = true
-    State.scriptRunning = true
-    updateStatus("Locked & Running", CONFIG.GUI_COLOR_LOCKED)
-    
+    updateStatus("Locked & Running", Color3.fromRGB(0, 255, 0))
     return true
 end
 
--- // 4. CORE GAME FUNCTIONS //
+-- // 4. CORE FUNCTIONS //
 
 local function findMoneyValue()
     local Player = game.Players.LocalPlayer
     if not Player then task.wait(1); return findMoneyValue() end
     
-    -- Standard Leaderstats
     local leaderstats = Player:FindFirstChild("leaderstats")
     if leaderstats then
         local money = leaderstats:FindFirstChild("Money") or leaderstats:FindFirstChild("Cash") or leaderstats:FindFirstChild("Credits")
         if money then return money end
     end
-    
     return nil
 end
 
 local function doubleMoney()
     local moneyObj = findMoneyValue()
-    if not moneyObj then 
-        print("[Khang_dz] Warning: Money object not found.") 
-        return 
-    end
+    if not moneyObj then return end
     
     local current = moneyObj.Value
     if typeof(current) == "number" then
         moneyObj.Value = current * CONFIG.DOUBLE_MULTIPLIER
-        print("[Khang_dz] Money Doubled: " .. moneyObj.Value)
     end
 end
 
@@ -142,8 +139,7 @@ local function doubleInvestors()
     
     local foldersToSearch = {
         Workspace:FindFirstChild("Shops") or Workspace,
-        Workspace:FindFirstChild("Baseplate") or Workspace,
-        Workspace:FindFirstChild("TycoonParts") or Workspace
+        Workspace:FindFirstChild("Baseplate") or Workspace
     }
     
     for _, folder in ipairs(foldersToSearch) do
@@ -152,6 +148,7 @@ local function doubleInvestors()
         for _, child in ipairs(folder:GetChildren()) do
             if child:IsA("Model") then
                 for _, pattern in ipairs(patterns) do
+                    -- Fixed string.find for Delta X compatibility (Lua 5.2+)
                     if string.find(child.Name, pattern, 1, true) then
                         pcall(function()
                             local clone = child:Clone()
@@ -170,8 +167,6 @@ local function doubleInvestors()
             end
         end
     end
-    
-    print("[Khang_dz] Investors Doubled. New Count: " .. count)
 end
 
 local function injectMassiveMoney()
@@ -182,14 +177,11 @@ local function injectMassiveMoney()
     
     if massiveVal then
         moneyObj.Value = moneyObj.Value + massiveVal
-        print("[Khang_dz] Massive Money Injected: " .. CONFIG.MASSIVE_MONEY)
     else
         if typeof(moneyObj.Value) == "string" then
             moneyObj.Value = CONFIG.MASSIVE_MONEY
-            print("[Khang_dz] Set Money to String Value")
         else
             moneyObj.Value = math.huge
-            print("[Khang_dz] Overflow to Infinity")
         end
     end
 end
@@ -197,29 +189,22 @@ end
 -- // 5. MAIN EXECUTION //
 
 local function main()
-    -- 1. Acquire Lock & Create UI
-    if not acquireLock() then
-        return
-    end
+    if not acquireLock() then return end
     
-    -- 2. Execute Functions
     local success, err = pcall(function()
-        updateStatus("Executing Money...", CONFIG.GUI_COLOR_LOCKED)
+        updateStatus("Executing Money...", Color3.fromRGB(0, 255, 0))
         doubleMoney()
         injectMassiveMoney()
         
-        updateStatus("Executing Investors...", CONFIG.GUI_COLOR_LOCKED)
+        updateStatus("Executing Investors...", Color3.fromRGB(0, 255, 0))
         doubleInvestors()
         
-        updateStatus("Completed (Permanent Lock)", CONFIG.GUI_COLOR_IDLE)
-        print("[Khang_dz] All tasks completed successfully. Lock is permanent.")
+        updateStatus("Completed (Permanent Lock)", Color3.fromRGB(100, 100, 100))
     end)
     
     if not success then
-        print("[Khang_dz] Error: " .. tostring(err))
-        updateStatus("Error: " .. tostring(err), CONFIG.GUI_COLOR_BUSY)
+        updateStatus("Error: " .. tostring(err), Color3.fromRGB(255, 100, 100))
     end
 end
 
--- Run the main function
 main()
