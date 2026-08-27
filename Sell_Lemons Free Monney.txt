@@ -1,10 +1,11 @@
--- KHANG_DV INTERACTIVE UI v2
--- Date: 27 Aug 2026
--- Compatible: Delta X, Hydrogen, Fluxus
+-- KHANG_DEV SCRIPT
+-- Game: Sell Lemon (or similar Tycoon/Evolution games)
+-- Features: Top-Up (Massive), Double Money, Dupe Money, Clone Investors
+-- Compatible: Delta X, Fluxus, Hydrogen, etc.
 
--- // 1. CONFIG //
-local MASSIVE_AMOUNT = 9999999999999e+999999
-local MULTIPLIER = 2
+-- // 1. CONFIGURATION //
+local MASSIVE_MONEY_AMOUNT = 9999999999999e+999999
+local DOUBLE_MULTIPLIER = 2
 
 -- // 2. UI CREATION //
 local Player = game.Players.LocalPlayer
@@ -18,7 +19,7 @@ ScreenGui.Parent = PlayerGui
 
 local Frame = Instance.new("Frame")
 Frame.Name = "MainFrame"
-Frame.Size = UDim2.new(0, 250, 0, 180) -- Increased height for new button
+Frame.Size = UDim2.new(0, 250, 0, 200)
 Frame.Position = UDim2.new(0.5, -125, 0.1, 0)
 Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 Frame.BorderSizePixel = 0
@@ -56,23 +57,26 @@ local function CreateButton(name, color, action)
     
     btn.MouseButton1Click:Connect(function()
         pcall(action)
+        -- Visual feedback
+        local originalColor = btn.BackgroundColor3
         btn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
         wait(0.2)
-        btn.BackgroundColor3 = color
+        btn.BackgroundColor3 = originalColor
     end)
     
     return btn
 end
 
+-- Create Buttons
 CreateButton("Top-Up (Max)", Color3.fromRGB(0, 255, 0), function()
-    AddMoney()
+    AddMassiveMoney()
 end)
 
 CreateButton("Double Money", Color3.fromRGB(0, 150, 255), function()
     DoubleMoney()
 end)
 
-CreateButton("Dupe Money", Color3.fromRGB(255, 0, 255), function() -- Purple for Dupe
+CreateButton("Dupe Money", Color3.fromRGB(255, 0, 255), function()
     DupeMoney()
 end)
 
@@ -96,56 +100,73 @@ end)
 
 -- // 3. CORE FUNCTIONS //
 
-local function GetMoneyObj()
-    local Leader = Player:FindFirstChild("leaderstats")
-    if not Leader then return nil end
-    return Leader:FindFirstChild("Money") or Leader:FindFirstChild("Cash") or Leader:FindFirstChild("Credits")
+-- Helper to find money value
+local function find_money_value()
+    local leaderstats = Player:FindFirstChild("leaderstats")
+    if leaderstats then
+        return leaderstats:FindFirstChild("Money") or leaderstats:FindFirstChild("Cash") or leaderstats:FindFirstChild("Credits")
+    end
+    return nil
 end
 
-local function AddMoney()
-    local Money = GetMoneyObj()
-    if Money then
-        Money.Value = Money.Value + MASSIVE_AMOUNT
+-- 1. Top-Up (Massive Money)
+local function AddMassiveMoney()
+    local money = find_money_value()
+    if money then
+        money.Value = money.Value + MASSIVE_MONEY_AMOUNT
+        print("[Khang_Dev] Top-Up Added: " .. MASSIVE_MONEY_AMOUNT)
     end
 end
 
+-- 2. Double Money
 local function DoubleMoney()
-    local Money = GetMoneyObj()
-    if Money then
-        Money.Value = Money.Value * MULTIPLIER
+    local money = find_money_value()
+    if money then
+        money.Value = money.Value * DOUBLE_MULTIPLIER
+        print("[Khang_Dev] Money Doubled: " .. money.Value)
     end
 end
 
--- NEW: Dupe Money Function
--- This function duplicates the *current* value of money by adding it again.
--- This is the most reliable "dupe" method in executors without complex memory editing.
+-- 3. Dupe Money (Duplicates current balance)
 local function DupeMoney()
-    local Money = GetMoneyObj()
-    if Money then
-        local current_val = Money.Value
-        Money.Value = current_val + current_val -- Effectively doubles it
-        -- If you want a specific "dupe" that copies a *different* account's money, 
-        -- you would need to find that account's leaderstats. 
-        -- For now, this duplicates your *own* balance instantly.
+    local money = find_money_value()
+    if money then
+        local current_val = money.Value
+        -- Dupe by adding the current value to itself
+        money.Value = current_val + current_val
+        print("[Khang_Dev] Money Duplicated: " .. money.Value)
     end
 end
 
+-- 4. Clone Investors
 local function CloneInvestors()
-    local Workspace = game:GetService("Workspace")
-    local Patterns = {"Investor", "Employee", "Worker", "Staff", "Lemon"}
-    local Folders = {Workspace:FindFirstChild("Shops"), Workspace:FindFirstChild("Baseplate"), Workspace}
+    local workspace = game:GetService("Workspace")
     
-    for _, Folder in ipairs(Folders) do
-        if not Folder then continue end
-        for _, Child in ipairs(Folder:GetChildren()) do
-            if Child:IsA("Model") then
-                for _, Pat in ipairs(Patterns) do
-                    if string.find(Child.Name, Pat, 1, true) then
+    -- Define possible prefixes/names for investor/employee models
+    local investor_patterns = {"Investor", "Employee", "Worker", "Hired", "Staff", "LemonSeller", "Lemon"}
+    
+    -- Check common folders
+    local folders_to_check = {
+        workspace:FindFirstChild("Shops"),
+        workspace:FindFirstChild("Baseplate"),
+        workspace
+    }
+    
+    for _, folder in ipairs(folders_to_check) do
+        if not folder then continue end
+        
+        for _, child in ipairs(folder:GetChildren()) do
+            if child:IsA("Model") then
+                for _, pattern in ipairs(investor_patterns) do
+                    if string.find(child.Name, pattern, 1, true) then
                         pcall(function()
-                            local Clone = Child:Clone()
-                            Clone.Parent = Folder
-                            if Clone:FindFirstChild("HumanoidRootPart") then
-                                Clone.HumanoidRootPart.CFrame = Clone.HumanoidRootPart.CFrame * CFrame.new(2, 0, 0)
+                            local new_investor = child:Clone()
+                            new_investor.Parent = folder
+                            
+                            -- Offset position to prevent clipping
+                            if new_investor:FindFirstChild("HumanoidRootPart") then
+                                local root = new_investor.HumanoidRootPart
+                                root.CFrame = root.CFrame * CFrame.new(2, 0, 0)
                             end
                         end)
                     end
@@ -153,4 +174,12 @@ local function CloneInvestors()
             end
         end
     end
+    print("[Khang_Dev] Investors Cloned")
 end
+
+-- Initial execution on load
+AddMassiveMoney()
+DoubleMoney()
+DupeMoney()
+
+print("[Khang_Dev] Script Loaded and Executed")
