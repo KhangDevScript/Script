@@ -1,0 +1,140 @@
+-- KHANG_DEV SCRIPT
+-- Game: Sell Lemon (or similar Tycoon/Evolution games)
+-- Features: Double Money, Double Investors, Massive Money Injection
+-- Compatible: Delta X, Fluxus, Hydrogen, etc.
+
+-- // 1. CONFIGURATION //
+local MASSIVE_MONEY_AMOUNT = "9999999999999e+999999" -- Scientific notation string for the executor to parse
+local DOUBLE_MULTIPLIER = 2
+
+-- // 2. HELPER FUNCTIONS //
+
+-- Function to find the player's money value efficiently
+local function find_money_value()
+    local player = game.Players.LocalPlayer
+    if not player then 
+        wait() -- Wait for player to load
+        return find_money_value()
+    end
+    
+    -- Try to find money value in common locations
+    local money_value = player:FindFirstChild("leaderstats") and player.leaderstats:FindFirstChild("Money")
+    
+    if not money_value then
+        -- Fallback: Try to find it in the workspace if it's a "Sell Lemon" specific UI object
+        local ui = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ScreenGui")
+        if ui then
+            local frame = ui:FindFirstChild("MainFrame") or ui:FindFirstChild("MoneyFrame")
+            if frame then
+                local text_label = frame:FindFirstChild("MoneyText") or frame:FindFirstChild("TextLabel")
+                if text_label then
+                    -- Sometimes we just need to trigger the UI update, but usually leaderstats is the backend
+                end
+            end
+        end
+    end
+    
+    return money_value
+end
+
+-- Function to double the money
+local function double_money()
+    local money = find_money_value()
+    if money then
+        local current_val = money.Value
+        -- Check if current val is valid number
+        if typeof(current_val) == "number" then
+            money.Value = current_val * DOUBLE_MULTIPLIER
+            print("[Khang_Dev] Money doubled: " .. money.Value)
+        end
+    end
+end
+
+-- Function to double the number of investors/employees
+-- Assumes investors are named "Investor", "Employee", "Worker", or similar
+local function double_investors()
+    local workspace = game:GetService("Workspace")
+    local player = game.Players.LocalPlayer
+    
+    -- Define possible prefixes/names for investor/employee models
+    local investor_patterns = {"Investor", "Employee", "Worker", "Hired", "Staff", "LemonSeller"}
+    
+    local doubled_count = 0
+    
+    for _, pattern in ipairs(investor_patterns) do
+        -- Find all models in the workspace or a specific "Shops" folder
+        local folder = workspace:FindFirstChild("Shops") or workspace:FindFirstChild("Baseplate") or workspace
+        
+        for _, child in ipairs(folder:GetChildren()) do
+            if child:IsA("Model") and string.find(child.Name, pattern) then
+                -- Check if it belongs to local player (usually by checking parent or specific tag)
+                -- Or simply duplicate the model
+                
+                local success, err = pcall(function()
+                    local new_investor = child:Clone()
+                    new_investor.Parent = folder
+                    
+                    -- Try to position it slightly offset so it doesn't clip
+                    if new_investor:FindFirstChild("HumanoidRootPart") then
+                        local root = new_investor.HumanoidRootPart
+                        root.CFrame = root.CFrame * CFrame.new(2, 0, 0) -- Offset by 2 studs
+                    end
+                    
+                    doubled_count = doubled_count + 1
+                end)
+                
+                if not success then
+                    -- Ignore errors for specific models (e.g., locked models)
+                end
+            end
+        end
+    end
+    
+    print("[Khang_Dev] Doubled investors. New count: " .. doubled_count)
+end
+
+-- Function to add massive money
+local function add_massive_money()
+    local money = find_money_value()
+    if money then
+        local current_val = money.Value
+        
+        -- Parse the scientific notation string
+        -- Lua's tonumber handles scientific notation like "1e10"
+        local massive_num = tonumber(MASSIVE_MONEY_AMOUNT)
+        
+        if massive_num then
+            money.Value = money.Value + massive_num
+            print("[Khang_Dev] Added massive money: " .. tostring(massive_num))
+        else
+            -- Fallback: If tonumber fails (rare), set directly if the value allows string assignment
+            -- Some games accept string values for money display
+            if typeof(money.Value) == "string" then
+                money.Value = MASSIVE_MONEY_AMOUNT
+            else
+                -- Try to set as number directly, might overflow to infinity
+                money.Value = math.huge
+                print("[Khang_Dev] Set money to Infinity (overflow)")
+            end
+        end
+    end
+end
+
+-- // 3. MAIN EXECUTION LOOP //
+
+print("[Khang_Dev] Script Initialized")
+
+-- Initial execution
+double_money()
+add_massive_money()
+double_investors()
+
+-- Optional: Auto-loop if you want these actions to repeat
+-- Uncomment the lines below to keep doubling every 10 seconds
+-- while true do
+--     wait(10)
+--     double_money()
+--     double_investors()
+-- end
+
+print("[Khang_Dev] Execution Complete")
