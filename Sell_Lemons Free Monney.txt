@@ -1,128 +1,134 @@
--- KHANG_DV ATTEMPT FIX
--- Compatible: Delta X, Hydrogen, Fluxus, Roblox Studio
+-- KHANG_DV INTERACTIVE UI
 -- Date: 27 Aug 2026
+-- Compatible: Delta X, Hydrogen, Fluxus
 
 -- // 1. CONFIG //
-local MASSIVE_NUM = "9999999999999e+999999" -- Scientific notation
+local MASSIVE_AMOUNT = 9999999999999e+999999
 local MULTIPLIER = 2
 
--- // 2. LOCK SYSTEM (Prevents "Attempt" re-runs) //
-local LOCK = "KhangDv_Lock"
-if game.Players.LocalPlayer:FindFirstChild(LOCK) then
-    -- Already running
-    return
-end
-
-local LockInstance = Instance.new("BoolValue")
-LockInstance.Name = LOCK
-LockInstance.Parent = game.Players.LocalPlayer
-
--- // 3. UI (Safe Creation) //
-local PlayerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui", 5)
-if not PlayerGui then return end
+-- // 2. UI CREATION //
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KhangDv_UI"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = PlayerGui
 
 local Frame = Instance.new("Frame")
-Frame.Name = "Status"
-Frame.Size = UDim2.new(0, 200, 0, 40)
-Frame.Position = UDim2.new(0.5, -100, 0, 10)
-Frame.BackgroundTransparency = 0.1
-Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame.Name = "MainFrame"
+Frame.Size = UDim2.new(0, 250, 0, 150)
+Frame.Position = UDim2.new(0.5, -125, 0.1, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 Frame.BorderSizePixel = 0
 Frame.Parent = ScreenGui
 
-local Label = Instance.new("TextLabel")
-Label.Name = "Txt"
-Label.Size = UDim2.new(1, 0, 1, 0)
-Label.BackgroundTransparency = 1
-Label.TextColor3 = Color3.fromRGB(0, 255, 0)
-Label.Font = Enum.Font.GothamBold
-Label.TextSize = 14
-Label.Text = "Khang_Dv: Starting..."
-Label.Parent = Frame
+local Header = Instance.new("TextLabel")
+Header.Name = "Header"
+Header.Size = UDim2.new(1, 0, 0, 30)
+Header.BackgroundTransparency = 0.5
+Header.Text = "Khang_Dv Control"
+Header.TextColor3 = Color3.fromRGB(255, 255, 255)
+Header.Font = Enum.Font.GothamBold
+Header.TextSize = 14
+Header.Parent = Frame
 
--- // 4. HELPER: Safe Wait //
-local function SafeWait(t)
-    if task and task.wait then
-        task.wait(t)
-    else
-        wait(t)
-    end
+local ButtonFrame = Instance.new("Frame")
+ButtonFrame.Name = "Buttons"
+ButtonFrame.Size = UDim2.new(1, -20, 1, -30)
+ButtonFrame.Position = UDim2.new(0, 10, 0, 30)
+ButtonFrame.BackgroundTransparency = 1
+ButtonFrame.Parent = Frame
+
+local function CreateButton(name, color, action)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Size = UDim2.new(1, -10, 0, 30)
+    btn.Position = UDim2.new(0, 5, 0, 5)
+    btn.BackgroundColor3 = color
+    btn.BorderSizePixel = 0
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.Parent = ButtonFrame
+    
+    btn.MouseButton1Click:Connect(function()
+        pcall(action)
+        btn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+        wait(0.2)
+        btn.BackgroundColor3 = color
+    end)
+    
+    return btn
 end
 
--- // 5. CORE FUNCTIONS //
+CreateButton("Top-Up (Max)", Color3.fromRGB(0, 255, 0), function()
+    AddMoney()
+end)
 
-local function GetMoney()
-    local Leader = game.Players.LocalPlayer:FindFirstChild("leaderstats")
+CreateButton("Double Money", Color3.fromRGB(0, 150, 255), function()
+    DoubleMoney()
+end)
+
+CreateButton("Clone Investors", Color3.fromRGB(255, 165, 0), function()
+    CloneInvestors()
+end)
+
+-- Close Button
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Name = "Close"
+CloseBtn.Size = UDim2.new(0, 20, 0, 20)
+CloseBtn.Position = UDim2.new(1, -25, 0, 5)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+CloseBtn.Parent = Header
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- // 3. CORE FUNCTIONS //
+
+local function GetMoneyObj()
+    local Leader = Player:FindFirstChild("leaderstats")
     if not Leader then return nil end
-    
-    -- Try common names
-    local Money = Leader:FindFirstChild("Money") or Leader:FindFirstChild("Cash") or Leader:FindFirstChild("Credits")
-    return Money
+    return Leader:FindFirstChild("Money") or Leader:FindFirstChild("Cash") or Leader:FindFirstChild("Credits")
+end
+
+local function AddMoney()
+    local Money = GetMoneyObj()
+    if Money then
+        Money.Value = Money.Value + MASSIVE_AMOUNT
+    end
 end
 
 local function DoubleMoney()
-    local MoneyObj = GetMoney()
-    if not MoneyObj then 
-        Label.Text = "No Money Found"
-        return 
-    end
-    
-    local Current = MoneyObj.Value
-    if type(Current) == "number" then
-        MoneyObj.Value = Current * MULTIPLIER
+    local Money = GetMoneyObj()
+    if Money then
+        Money.Value = Money.Value * MULTIPLIER
     end
 end
 
-local function AddMassiveMoney()
-    local MoneyObj = GetMoney()
-    if not MoneyObj then return end
-    
-    -- Parse scientific notation
-    local BigNum = tonumber(MASSIVE_NUM)
-    
-    if BigNum then
-        MoneyObj.Value = MoneyObj.Value + BigNum
-    else
-        -- Fallback
-        MoneyObj.Value = math.huge
-    end
-end
-
-local function DoubleInvestors()
+local function CloneInvestors()
     local Workspace = game:GetService("Workspace")
-    local Patterns = {"Investor", "Employee", "Worker", "Staff", "Lemon", "Seller"}
-    local Count = 0
+    local Patterns = {"Investor", "Employee", "Worker", "Staff", "Lemon"}
+    local Folders = {Workspace:FindFirstChild("Shops"), Workspace:FindFirstChild("Baseplate"), Workspace}
     
-    -- Search common folders
-    local Targets = {
-        Workspace:FindFirstChild("Shops"),
-        Workspace:FindFirstChild("Baseplate"),
-        Workspace
-    }
-    
-    for _, Folder in ipairs(Targets) do
-        if not Folder then continue end -- Lua 5.2+ continue
-        
+    for _, Folder in ipairs(Folders) do
+        if not Folder then continue end
         for _, Child in ipairs(Folder:GetChildren()) do
             if Child:IsA("Model") then
                 for _, Pat in ipairs(Patterns) do
-                    -- Safe string check
                     if string.find(Child.Name, Pat, 1, true) then
                         pcall(function()
                             local Clone = Child:Clone()
                             Clone.Parent = Folder
-                            
                             if Clone:FindFirstChild("HumanoidRootPart") then
-                                local Root = Clone.HumanoidRootPart
-                                Root.CFrame = Root.CFrame * CFrame.new(2, 0, 0)
+                                Clone.HumanoidRootPart.CFrame = Clone.HumanoidRootPart.CFrame * CFrame.new(2, 0, 0)
                             end
-                            
-                            Count = Count + 1
                         end)
                     end
                 end
@@ -130,41 +136,3 @@ local function DoubleInvestors()
         end
     end
 end
-
--- // 6. MAIN EXECUTION //
-
-local function Run()
-    Label.Text = "Khang_Dv: Locking..."
-    SafeWait(0.1)
-    
-    Label.Text = "Khang_Dv: Doubling Money..."
-    pcall(DoubleMoney)
-    SafeWait(0.1)
-    
-    Label.Text = "Khang_Dv: Injecting $$$..."
-    pcall(AddMassiveMoney)
-    SafeWait(0.1)
-    
-    Label.Text = "Khang_Dv: Doubling Investors..."
-    pcall(DoubleInvestors)
-    SafeWait(0.1)
-    
-    Label.Text = "Khang_Dv: Done (Permanent)"
-    Frame.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
-end
-
--- Start
-Run()
--- Add this at the very end of the script to create a toggle button
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(0, 80, 0, 30)
-ToggleBtn.Position = UDim2.new(0.5, -40, 0, 50)
-ToggleBtn.Text = "OFF"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
-ToggleBtn.Parent = ScreenGui -- Using the existing ScreenGui
-
-ToggleBtn.MouseButton1Click:Connect(function()
-    ToggleBtn.Text = "ON"
-    ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    -- You can re-run functions here if needed
-end)
