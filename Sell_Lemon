@@ -1,0 +1,236 @@
+-- KHANG_DEV SCRIPT Final - With Text Input for Money Name
+-- Date: 28 Aug 2026
+-- Features: Rainbow UI, Custom Money Input, Doublers, Cloner
+
+-- // 1. CONFIGURATION //
+local CUSTOM_MONEY_VALUE = 134.803e2721 -- 134.803 x 10^2721
+local DOUBLE_MULTIPLIER = 2
+
+-- // 2. HELPER: HSL to RGB //
+local function hsl_to_rgb(h, s, l)
+    h = h % 1
+    s = math.clamp(s, 0, 1)
+    l = math.clamp(l, 0, 1)
+    local q = l < 0.5 and l * (1 + s) or l + s - l * s
+    local p = 2 * l - q
+    local k = {p, p + 2/3, p - 2/3}
+    local function color(val)
+        val = val + p
+        if val < 0 then val = 0 end
+        if val > 1 then val = 1 end
+        if val < 1/6 then return p + (q - p) * 6 * val end
+        if val < 1/2 then return q end
+        if val < 2/3 then return p + (q - p) * (2/3 - val) * 6 end
+        return p
+    end
+    return Color3.fromRGB(
+        math.floor(color(k[1]) * 255),
+        math.floor(color(k[2]) * 255),
+        math.floor(color(k[3]) * 255)
+    )
+end
+
+-- // 3. UI CREATION //
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "KhangDv_UI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = PlayerGui
+
+local Frame = Instance.new("Frame")
+Frame.Name = "MainFrame"
+Frame.Size = UDim2.new(0, 300, 0, 450) -- Increased height slightly for Input/Label
+Frame.Position = UDim2.new(0.5, -150, 0.05, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Frame.BorderSizePixel = 0
+Frame.Parent = ScreenGui
+
+local Header = Instance.new("TextLabel")
+Header.Name = "Header"
+Header.Size = UDim2.new(1, 0, 0, 35)
+Header.BackgroundTransparency = 0.3
+Header.Text = "Khang_Dv Ultimate"
+Header.TextColor3 = Color3.fromRGB(255, 255, 255)
+Header.Font = Enum.Font.GothamBold
+Header.TextSize = 14
+Header.Parent = Frame
+
+local ButtonContainer = Instance.new("ScrollingFrame")
+ButtonContainer.Name = "Buttons"
+ButtonContainer.Size = UDim2.new(1, -20, 0.6, -20) -- Adjusted size
+ButtonContainer.Position = UDim2.new(0, 10, 0, 40)
+ButtonContainer.BackgroundTransparency = 0.5
+ButtonContainer.ScrollBarThickness = 2
+ButtonContainer.Parent = Frame
+
+-- Input Box
+local InputBox = Instance.new("TextBox")
+InputBox.Name = "InputBox"
+InputBox.Size = UDim2.new(1, -20, 0, 30)
+InputBox.Position = UDim2.new(0, 10, 0.7, 10)
+InputBox.PlaceholderText = "Money Name (e.g., Money, Cash)"
+InputBox.Text = ""
+InputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+InputBox.Font = Enum.Font.Gotham
+InputBox.TextSize = 14
+InputBox.Parent = Frame
+
+local Label = Instance.new("TextLabel")
+Label.Name = "Label"
+Label.Size = UDim2.new(1, -20, 0, 20)
+Label.Position = UDim2.new(0, 10, 0.65, 10)
+Label.Text = "Custom Money Name:"
+Label.TextColor3 = Color3.fromRGB(150, 150, 150)
+Label.Font = Enum.Font.Gotham
+Label.TextSize = 12
+Label.Parent = Frame
+
+-- Close Button
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Name = "Close"
+CloseBtn.Size = UDim2.new(0, 25, 0, 25)
+CloseBtn.Position = UDim2.new(1, -30, 0, 5)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+CloseBtn.Parent = Header
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Rainbow Loop Variables
+local hue = 0
+
+task.spawn(function()
+    while ScreenGui and ScreenGui.Parent do
+        hue = (hue + 0.005) % 1
+        local currentColor = hsl_to_rgb(hue, 1, 0.5)
+        for _, btn in ipairs(ButtonContainer:GetChildren()) do
+            if btn:IsA("TextButton") and btn.BackgroundColor3 ~= Color3.fromRGB(200, 0, 0) then
+                btn.BackgroundColor3 = currentColor
+            end
+        end
+        task.wait(0.05)
+    end
+end)
+
+-- // 4. CORE FUNCTIONS //
+
+local function find_money_value(custom_name)
+    local leaderstats = Player:FindFirstChild("leaderstats")
+    if leaderstats then
+        -- If custom name is provided, use it
+        if custom_name and custom_name ~= "" then
+            local val = leaderstats:FindFirstChild(custom_name)
+            if val then return val end
+        end
+        -- Fallback to common names
+        return leaderstats:FindFirstChild("Money") or leaderstats:FindFirstChild("Cash") or leaderstats:FindFirstChild("Credits")
+    end
+    return nil
+end
+
+-- Function to create a button
+local function createButton(name, onClick)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Size = UDim2.new(1, -20, 0, 40)
+    btn.Position = UDim2.new(0, 0, 0, 0) -- Will be positioned by UIListLayout
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.Parent = ButtonContainer
+    
+    btn.MouseButton1Click:Connect(onClick)
+    return btn
+end
+
+-- Layout for buttons
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.Parent = ButtonContainer
+
+-- 1. Set Money Button
+createButton("Set Money", function()
+    local customName = InputBox.Text
+    local money = find_money_value(customName)
+    if money then
+        money.Value = CUSTOM_MONEY_VALUE
+        print("[Khang_Dev] Money Set to: " .. CUSTOM_MONEY_VALUE)
+    else
+        print("[Khang_Dev] Money not found. Check the name in the text box.")
+    end
+end)
+
+-- 2. Double Money Button
+createButton("Double Money", function()
+    local customName = InputBox.Text
+    local money = find_money_value(customName)
+    if money then
+        local currentVal = money.Value
+        if typeof(currentVal) == "number" then
+            money.Value = currentVal * DOUBLE_MULTIPLIER
+            print("[Khang_Dev] Money Doubled: " .. money.Value)
+        else
+            print("[Khang_Dev] Money value is not a number: " .. tostring(currentVal))
+        end
+    else
+        print("[Khang_Dev] Money not found.")
+    end
+end)
+
+-- 3. Cloner Button
+createButton("Cloner (Double Investors)", function()
+    local workspace = game:GetService("Workspace")
+    local folder = workspace:FindFirstChild("Shops") or workspace:FindFirstChild("Baseplate") or workspace
+    
+    local clonedCount = 0
+    local patterns = {"Investor", "Employee", "Worker", "Hired", "Staff", "Seller", "Lemon"}
+    
+    for _, pattern in ipairs(patterns) do
+        local folderToSearch = folder
+        -- Try to find a folder with this name or iterate workspace
+        if folder ~= workspace then
+             -- If we are in Shops/Baseplate, check children
+             for _, child in ipairs(folder:GetChildren()) do
+                 if child:IsA("Model") and string.find(child.Name, pattern, 1, true) then
+                     local success, err = pcall(function()
+                         local clone = child:Clone()
+                         clone.Parent = folder
+                         clonedCount = clonedCount + 1
+                         
+                         -- Offset position slightly to avoid clipping
+                         if clone:FindFirstChild("HumanoidRootPart") then
+                             local root = clone.HumanoidRootPart
+                             root.CFrame = root.CFrame + Vector3.new(2, 0, 0)
+                         end
+                     end)
+                 end
+             end
+        else
+            -- If workspace is the folder, search directly
+            for _, child in ipairs(workspace:GetChildren()) do
+                if child:IsA("Model") and string.find(child.Name, pattern, 1, true) then
+                    local success, err = pcall(function()
+                        local clone = child:Clone()
+                        clone.Parent = workspace
+                        clonedCount = clonedCount + 1
+                        if clone:FindFirstChild("HumanoidRootPart") then
+                            local root = clone.HumanoidRootPart
+                            root.CFrame = root.CFrame + Vector3.new(2, 0, 0)
+                        end
+                    end)
+                end
+            end
+        end
+    end
+    print("[Khang_Dev] Cloned: " .. clonedCount .. " units.")
+end)
+
+print("[Khang_Dev] Script Loaded Successfully.")
