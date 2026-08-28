@@ -1,13 +1,36 @@
--- KHANG_DEV SCRIPT v3
--- Game: Sell Lemon
+-- KHANG_DEV SCRIPT Final - With Text Input for Money Name
 -- Date: 28 Aug 2026
--- Feature: Custom Money Value (13e348)
+-- Features: Rainbow UI, Custom Money Input, Doublers, Cloner
 
 -- // 1. CONFIGURATION //
-local CUSTOM_MONEY_VALUE = 13e348  -- Changed to 13e348
+local CUSTOM_MONEY_VALUE = 134.803e2721 -- 134.803 x 10^2721
 local DOUBLE_MULTIPLIER = 2
 
--- // 2. UI CREATION //
+-- // 2. HELPER: HSL to RGB //
+local function hsl_to_rgb(h, s, l)
+    h = h % 1
+    s = math.clamp(s, 0, 1)
+    l = math.clamp(l, 0, 1)
+    local q = l < 0.5 and l * (1 + s) or l + s - l * s
+    local p = 2 * l - q
+    local k = {p, p + 2/3, p - 2/3}
+    local function color(val)
+        val = val + p
+        if val < 0 then val = 0 end
+        if val > 1 then val = 1 end
+        if val < 1/6 then return p + (q - p) * 6 * val end
+        if val < 1/2 then return q end
+        if val < 2/3 then return p + (q - p) * (2/3 - val) * 6 end
+        return p
+    end
+    return Color3.fromRGB(
+        math.floor(color(k[1]) * 255),
+        math.floor(color(k[2]) * 255),
+        math.floor(color(k[3]) * 255)
+    )
+end
+
+-- // 3. UI CREATION //
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
@@ -19,75 +42,35 @@ ScreenGui.Parent = PlayerGui
 
 local Frame = Instance.new("Frame")
 Frame.Name = "MainFrame"
-Frame.Size = UDim2.new(0, 250, 0, 200)
-Frame.Position = UDim2.new(0.5, -125, 0.1, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.Size = UDim2.new(0, 300, 0, 400)
+Frame.Position = UDim2.new(0.5, -150, 0.05, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Frame.BorderSizePixel = 0
 Frame.Parent = ScreenGui
 
 local Header = Instance.new("TextLabel")
 Header.Name = "Header"
-Header.Size = UDim2.new(1, 0, 0, 30)
-Header.BackgroundTransparency = 0.5
-Header.Text = "Khang_Dv Control"
+Header.Size = UDim2.new(1, 0, 0, 35)
+Header.BackgroundTransparency = 0.3
+Header.Text = "Khang_Dv Ultimate"
 Header.TextColor3 = Color3.fromRGB(255, 255, 255)
 Header.Font = Enum.Font.GothamBold
 Header.TextSize = 14
 Header.Parent = Frame
 
-local ButtonFrame = Instance.new("Frame")
-ButtonFrame.Name = "Buttons"
-ButtonFrame.Size = UDim2.new(1, -20, 1, -30)
-ButtonFrame.Position = UDim2.new(0, 10, 0, 30)
-ButtonFrame.BackgroundTransparency = 1
-ButtonFrame.Parent = Frame
-
-local function CreateButton(name, color, action)
-    local btn = Instance.new("TextButton")
-    btn.Name = name
-    btn.Size = UDim2.new(1, -10, 0, 30)
-    btn.Position = UDim2.new(0, 5, 0, 5)
-    btn.BackgroundColor3 = color
-    btn.BorderSizePixel = 0
-    btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 12
-    btn.Parent = ButtonFrame
-    
-    btn.MouseButton1Click:Connect(function()
-        pcall(action)
-        local originalColor = btn.BackgroundColor3
-        btn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-        wait(0.2)
-        btn.BackgroundColor3 = originalColor
-    end)
-    
-    return btn
-end
-
--- Create Buttons
-CreateButton("Set Money (13e348)", Color3.fromRGB(0, 255, 0), function()
-    SetCustomMoney()
-end)
-
-CreateButton("Double Money", Color3.fromRGB(0, 150, 255), function()
-    DoubleMoney()
-end)
-
-CreateButton("Dupe Money", Color3.fromRGB(255, 0, 255), function()
-    DupeMoney()
-end)
-
-CreateButton("Clone Investors", Color3.fromRGB(255, 165, 0), function()
-    CloneInvestors()
-end)
+local ButtonContainer = Instance.new("ScrollingFrame")
+ButtonContainer.Name = "Buttons"
+ButtonContainer.Size = UDim2.new(1, -20, 1, -40)
+ButtonContainer.Position = UDim2.new(0, 10, 0, 40)
+ButtonContainer.BackgroundTransparency = 0.5
+ButtonContainer.ScrollBarThickness = 2
+ButtonContainer.Parent = Frame
 
 -- Close Button
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Name = "Close"
-CloseBtn.Size = UDim2.new(0, 20, 0, 20)
-CloseBtn.Position = UDim2.new(1, -25, 0, 5)
+CloseBtn.Size = UDim2.new(0, 25, 0, 25)
+CloseBtn.Position = UDim2.new(1, -30, 0, 5)
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
@@ -97,44 +80,67 @@ CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- // 3. CORE FUNCTIONS //
+-- Rainbow Loop Variables
+local hue = 0
 
-local function find_money_value()
+task.spawn(function()
+    while ScreenGui and ScreenGui.Parent do
+        hue = (hue + 0.005) % 1
+        local currentColor = hsl_to_rgb(hue, 1, 0.5)
+        for _, btn in ipairs(ButtonContainer:GetChildren()) do
+            if btn:IsA("TextButton") and btn.BackgroundColor3 ~= Color3.fromRGB(200, 0, 0) then
+                btn.BackgroundColor3 = currentColor
+            end
+        end
+        task.wait(0.05)
+    end
+end)
+
+-- // 4. CORE FUNCTIONS //
+
+local function find_money_value(custom_name)
     local leaderstats = Player:FindFirstChild("leaderstats")
     if leaderstats then
+        -- If custom name is provided, use it
+        if custom_name and custom_name ~= "" then
+            local val = leaderstats:FindFirstChild(custom_name)
+            if val then return val end
+        end
+        -- Fallback to common names
         return leaderstats:FindFirstChild("Money") or leaderstats:FindFirstChild("Cash") or leaderstats:FindFirstChild("Credits")
     end
     return nil
 end
 
--- 1. Set Money to 13e348
 local function SetCustomMoney()
-    local money = find_money_value()
+    local customName = InputBox.Text
+    local money = find_money_value(customName)
     if money then
         money.Value = CUSTOM_MONEY_VALUE
         print("[Khang_Dev] Money Set to: " .. CUSTOM_MONEY_VALUE)
+    else
+        print("[Khang_Dev] Money not found. Check the name in the text box.")
     end
 end
 
--- 2. Double Money
 local function DoubleMoney()
-    local money = find_money_value()
+    local customName = InputBox.Text
+    local money = find_money_value(customName)
     if money then
         money.Value = money.Value * DOUBLE_MULTIPLIER
         print("[Khang_Dev] Money Doubled")
     end
 end
 
--- 3. Dupe Money
 local function DupeMoney()
-    local money = find_money_value()
+    local customName = InputBox.Text
+    local money = find_money_value(customName)
     if money then
         money.Value = money.Value + money.Value
         print("[Khang_Dev] Money Duplicated")
     end
 end
 
--- 4. Clone Investors
 local function CloneInvestors()
     local workspace = game:GetService("Workspace")
     local investor_patterns = {"Investor", "Employee", "Worker", "Hired", "Staff", "LemonSeller", "Lemon"}
@@ -161,9 +167,54 @@ local function CloneInvestors()
     print("[Khang_Dev] Investors Cloned")
 end
 
--- Initial execution
+-- // 5. UI GENERATION //
+
+local function CreateButton(name, action, yPos)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Size = UDim2.new(1, -10, 0, 35)
+    btn.Position = UDim2.new(0, 5, 0, yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btn.BorderSizePixel = 0
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.Parent = ButtonContainer
+    
+    btn.MouseButton1Click:Connect(function()
+        local originalColor = btn.BackgroundColor3
+        btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        btn.BackgroundColor3 = originalColor
+        pcall(action)
+    end)
+    
+    return btn
+end
+
+-- Create Text Box for Money Name
+local InputBox = Instance.new("TextBox")
+InputBox.Name = "MoneyInput"
+InputBox.Size = UDim2.new(1, -20, 0, 25)
+InputBox.Position = UDim2.new(0, 10, 0, 45) -- Position above buttons if needed, or inside container
+InputBox.PlaceholderText = "Enter Money Name (e.g. Cash)"
+InputBox.Text = ""
+InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+InputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+InputBox.Font = Enum.Font.GothamSemibold
+InputBox.TextSize = 12
+InputBox.Parent = ButtonContainer -- Add to container
+
+-- Create Buttons
+-- Adjust yPos for buttons since InputBox is inside
+CreateButton("Set Money (134.803x10^2721)", SetCustomMoney, 40)
+CreateButton("Double Money", DoubleMoney, 80)
+CreateButton("Dupe Money", DupeMoney, 120)
+CreateButton("Clone Investors", CloneInvestors, 160)
+
+-- Initial Execution
 SetCustomMoney()
 DoubleMoney()
 DupeMoney()
 
-print("[Khang_Dev] Script Loaded (Money: 13e348)")
+print("[Khang_Dev] Ultimate UI Loaded")
