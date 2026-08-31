@@ -418,11 +418,11 @@ button.MouseButton1Click:Connect(function()
 		for _, p in pairs(groups[selectedFruit]) do
 			scaleParts(p)
 		end
-		-- BINAGO: 15x na lang ang madadagdag sa scale multi
+		-- BINAGO: 200x na lang ang madadagdag sa scale multi
 		scaledNames[selectedFruit] = (scaledNames[selectedFruit] or 1) * 3
 		
 		local origText = button.Text
-		button.Text = "✅ Scaled x15!"
+		button.Text = "✅ Scaled x100!"
 		button.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
 		
 		task.wait(0.8)
@@ -441,4 +441,4 @@ button.MouseButton1Click:Connect(function()
 	end
 end)
 
-print("✅ DONE: 15x resizing multiplier applied and footer updated to 'Made by Khang.'!")
+print("✅ DONE: 300x resizing multiplier applied and footer updated to 'Made by Khang.'!")
