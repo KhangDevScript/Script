@@ -1,7 +1,7 @@
 -- Clean up existing UI if present
 local CoreGui = game:GetService("CoreGui")
-if CoreGui:FindFirstChild("MochiiHubCustom") then
-    CoreGui.MochiiHubCustom:Destroy()
+if CoreGui:FindFirstChild("KhangHubCustom") then
+    CoreGui.KhangHubCustom:Destroy()
 end
 
 -- Services
@@ -49,7 +49,7 @@ end
 
 -- ScreenGui Setup
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "MochiiHubCustom"
+ScreenGui.Name = "KhangHubCustom"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
@@ -98,7 +98,7 @@ TitleLabel.BackgroundTransparency = 1
 TitleLabel.Position = UDim2.new(0, 12, 0, 0)
 TitleLabel.Size = UDim2.new(1, -24, 1, 0)
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "🍓 Mochii Hub"
+TitleLabel.Text = "⚡ Khang_Dev"
 TitleLabel.TextColor3 = Color3.fromRGB(235, 235, 235)
 TitleLabel.TextSize = 16
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -162,7 +162,7 @@ local function createColoredButton(text, baseColor, hoverColor)
 end
 
 -- 1. Set / Remove Marker Button
-local SetMarkBtn = createColoredButton("📍 Set Marker", Color3.fromRGB(45, 125, 220), Color3.fromRGB(65, 145, 240))
+local SetMarkBtn = createColoredButton("⚡ Set Marker", Color3.fromRGB(45, 125, 220), Color3.fromRGB(65, 145, 240))
 SetMarkBtn.Parent = Container
 SetMarkBtn.LayoutOrder = 1
 
@@ -185,7 +185,7 @@ SetMarkBtn.MouseButton1Click:Connect(function()
             visualMark = nil
         end
 
-        SetMarkBtn.Text = "📍 Set Marker"
+        SetMarkBtn.Text = "⚡ Set Marker"
     end
 end)
 
@@ -210,7 +210,7 @@ WalkBackBtn.MouseButton1Click:Connect(function()
         local humanoid = character:FindFirstChildOfClass("Humanoid")
         local rootPart = character:FindFirstChild("HumanoidRootPart")
 
-        WalkBackBtn.Text = "🏃 Running..."
+        WalkBackBtn.Text = "⚡ Running..."
 
         local distance = (rootPart.Position - markedPosition.Position).Magnitude
         local travelTime = distance / 600 
@@ -264,7 +264,7 @@ BypassBtn.MouseButton1Click:Connect(function()
     if updatedChar then
         local newH = updatedChar:FindFirstChildOfClass('Humanoid')
         if newH then
-            newH.WalkSpeed = 300
+            newH.WalkSpeed = 350
         end
     end
 
@@ -274,7 +274,7 @@ BypassBtn.MouseButton1Click:Connect(function()
     TweenService:Create(BypassBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(180, 40, 40)}):Play()
 end)
 
--- 4. Made by Mochii Scripts Text
+-- 4. Made by Khang_Dev Scripts Text
 local CreditLabel = Instance.new("TextLabel")
 CreditLabel.Name = "CreditLabel"
 CreditLabel.Parent = Container
@@ -282,7 +282,7 @@ CreditLabel.LayoutOrder = 4
 CreditLabel.BackgroundTransparency = 1
 CreditLabel.Size = UDim2.new(1, 0, 0, 14)
 CreditLabel.Font = Enum.Font.GothamMedium
-CreditLabel.Text = "Made by Mochii Scripts"
+CreditLabel.Text = "Made by Khang_Dev"
 CreditLabel.TextColor3 = Color3.fromRGB(140, 140, 140)
 CreditLabel.TextSize = 10
 CreditLabel.TextXAlignment = Enum.TextXAlignment.Center
