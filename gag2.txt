@@ -1,0 +1,444 @@
+if not game:IsLoaded() then
+	game.Loaded:Wait()
+end
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
+if not PlayerGui then warn("Hindi mahanap ang PlayerGui!") return end
+
+if PlayerGui:FindFirstChild("VisualItemResizer") then
+	PlayerGui.VisualItemResizer:Destroy()
+end
+
+-- ===================== CORE BACKEND LOGIC =====================
+local plotId = LocalPlayer:GetAttribute("PlotId")
+local scaledNames = {}
+local scaledVisuals = {}
+local selectedFruit = nil 
+
+local WeightFormat = require(ReplicatedStorage.SharedModules.WeightFormat)
+local origFormatGrams = WeightFormat.FormatGrams
+
+WeightFormat.FormatGrams = function(p1)
+	local n = tonumber(p1) or 0
+	local tooltip = PlayerGui:FindFirstChild("PlantHoverTooltip")
+	if tooltip then
+		local frame = tooltip:FindFirstChild("Frame")
+		if frame then
+			local nameLabel = frame:FindFirstChild("Name")
+			if nameLabel and scaledNames[nameLabel.Text] then
+				return origFormatGrams(n * scaledNames[nameLabel.Text])
+			end
+		end
+	end
+	return origFormatGrams(n)
+end
+
+-- BINAGO: 3x na lang ang multiplier sa paglaki ng parts
+local function scaleParts(model)
+	local fruits = model:FindFirstChild("Fruits")
+	local target = fruits or model
+	for _, part in pairs(target:GetDescendants()) do
+		if part:IsA("BasePart") then
+			part.Size = part.Size * 3
+		end
+	end
+end
+
+local function getBaseWeight(toolName)
+	local weightStr = toolName:match("%[(.-)kg%]")
+	return tonumber(weightStr)
+end
+
+local function updateTool(tool)
+	if tool:GetAttribute("Fruit") == nil then return end
+	local seedName = tool:GetAttribute("SeedName") or tool.Name:match("^(.-)%s*%[")
+	local multi = (seedName and scaledNames[seedName]) or 1
+	local base = getBaseWeight(tool.Name)
+	if not base then return end
+	local newWeight = base * multi
+	tool:SetAttribute("Weight", newWeight)
+	tool.Name = tool.Name:gsub("%[.-%]", "[" .. string.format("%.2f", newWeight) .. "kg]")
+end
+
+local function tryScaleVisual(model)
+	if scaledVisuals[model] then return end
+	local owner = model:GetAttribute("Owner")
+	if not owner or owner ~= LocalPlayer.UserId then return end
+	task.spawn(function()
+		local deadline = os.clock() + 5
+		while os.clock() < deadline do
+			local parts = model:GetDescendants()
+			local hasParts = false
+			for _, d in pairs(parts) do
+				if d:IsA("BasePart") then hasParts = true break end
+			end
+			if hasParts then break end
+			task.wait(0.1)
+		end
+		if scaledVisuals[model] then return end
+		local plantModel = model:FindFirstChildWhichIsA("Model")
+		if not plantModel then return end
+		local seedName = plantModel:GetAttribute("SeedName")
+		if not seedName then return end
+		local multi = scaledNames[seedName] or 1
+		if multi == 1 then return end
+		scaledVisuals[model] = true
+		for _, part in pairs(model:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.Size = part.Size * multi
+			end
+		end
+	end)
+end
+
+LocalPlayer.Backpack.ChildAdded:Connect(function(tool)
+	if tool:IsA("Tool") then updateTool(tool) end
+end)
+
+for _, tool in pairs(LocalPlayer.Backpack:GetChildren()) do
+	if tool:IsA("Tool") then updateTool(tool) end
+end
+
+local pottedVisuals = workspace:WaitForChild("PottedPlantVisuals", 10)
+if pottedVisuals then
+	for _, model in pairs(pottedVisuals:GetChildren()) do
+		tryScaleVisual(model)
+	end
+	pottedVisuals.ChildAdded:Connect(function(model)
+		tryScaleVisual(model)
+	end)
+end
+
+-- ===================== UI SETUP =====================
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "VisualItemResizer"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = PlayerGui
+
+local panel = Instance.new("Frame")
+panel.Name = "Panel"
+panel.Size = UDim2.new(0, 240, 0, 115) 
+panel.Position = UDim2.new(0.5, -120, 0.5, -57)
+panel.BackgroundColor3 = Color3.fromRGB(13, 13, 18)
+panel.BorderSizePixel = 0
+panel.Active = true
+panel.Parent = screenGui
+
+local panelCorner = Instance.new("UICorner")
+panelCorner.CornerRadius = UDim.new(0, 10)
+panelCorner.Parent = panel
+
+local panelStroke = Instance.new("UIStroke")
+panelStroke.Color = Color3.fromRGB(124, 58, 237)
+panelStroke.Thickness = 1.2
+panelStroke.Transparency = 0.2
+panelStroke.Parent = panel
+
+-- HEADER
+local header = Instance.new("Frame")
+header.Name = "Header"
+header.Size = UDim2.new(1, 0, 0, 30) 
+header.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+header.BorderSizePixel = 0
+header.Parent = panel
+
+Instance.new("UICorner", header).CornerRadius = UDim.new(0, 10)
+
+local headerFix = Instance.new("Frame")
+headerFix.Size = UDim2.new(1, 0, 0, 8)
+headerFix.Position = UDim2.new(0, 0, 1, -8)
+headerFix.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+headerFix.BorderSizePixel = 0
+headerFix.Parent = header
+
+local headerLine = Instance.new("Frame")
+headerLine.Size = UDim2.new(1, 0, 0, 1.5)
+headerLine.Position = UDim2.new(0, 0, 1, -1.5)
+headerLine.BackgroundColor3 = Color3.fromRGB(124, 58, 237)
+headerLine.BorderSizePixel = 0
+headerLine.Parent = header
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -20, 1, 0)
+titleLabel.Position = UDim2.new(0, 10, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "⚡ FRUITS SIZER"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 11 
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = header
+
+-- MAIN BODY LAYOUT
+local body = Instance.new("Frame")
+body.Size = UDim2.new(1, -20, 1, -40)
+body.Position = UDim2.new(0, 10, 0, 36)
+body.BackgroundTransparency = 1
+body.Parent = panel
+
+local bodyLayout = Instance.new("UIListLayout")
+bodyLayout.SortOrder = Enum.SortOrder.LayoutOrder
+bodyLayout.Padding = UDim.new(0, 6)
+bodyLayout.Parent = body
+
+-- COLLAPSIBLE FRUIT DROPDOWN BOX
+local itemRow = Instance.new("Frame")
+itemRow.Name = "FruitDropdownRow"
+itemRow.Size = UDim2.new(1, 0, 0, 26) 
+itemRow.BackgroundColor3 = Color3.fromRGB(35, 35, 48)
+itemRow.LayoutOrder = 1
+itemRow.ClipsDescendants = true 
+itemRow.Parent = body
+
+Instance.new("UICorner", itemRow).CornerRadius = UDim.new(0, 8)
+local itemStroke = Instance.new("UIStroke")
+itemStroke.Color = Color3.fromRGB(90, 90, 120)
+itemStroke.Thickness = 1
+itemStroke.Transparency = 0.5
+itemStroke.Parent = itemRow
+
+local dropdownBar = Instance.new("Frame")
+dropdownBar.Name = "DropdownBar"
+dropdownBar.Size = UDim2.new(1, 0, 0, 26)
+dropdownBar.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+dropdownBar.BorderSizePixel = 0
+dropdownBar.Parent = itemRow
+
+local dropdownTitle = Instance.new("TextLabel")
+dropdownTitle.Size = UDim2.new(1, -40, 1, 0)
+dropdownTitle.Position = UDim2.new(0, 8, 0, 0)
+dropdownTitle.BackgroundTransparency = 1
+dropdownTitle.Text = "🌱 Select Fruit"
+dropdownTitle.TextColor3 = Color3.fromRGB(170, 170, 170)
+dropdownTitle.Font = Enum.Font.GothamBold
+dropdownTitle.TextSize = 10
+dropdownTitle.TextXAlignment = Enum.TextXAlignment.Left
+dropdownTitle.Parent = dropdownBar
+
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Name = "ToggleListButton"
+toggleBtn.Size = UDim2.new(0, 44, 1, -6)
+toggleBtn.Position = UDim2.new(1, -50, 0, 3)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113) 
+toggleBtn.Text = "OPEN" 
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.TextSize = 8
+toggleBtn.BorderSizePixel = 0
+toggleBtn.Parent = dropdownBar
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 4)
+
+local scroll = Instance.new("ScrollingFrame")
+scroll.Size = UDim2.new(1, -10, 1, -32)
+scroll.Position = UDim2.new(0, 5, 0, 29)
+scroll.BackgroundTransparency = 1
+scroll.BorderSizePixel = 0
+scroll.ScrollBarThickness = 3
+scroll.ScrollBarImageColor3 = Color3.fromRGB(124, 58, 237)
+scroll.Parent = itemRow
+
+local scrollLayout = Instance.new("UIListLayout")
+scrollLayout.Padding = UDim.new(0, 4)
+scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+scrollLayout.Parent = scroll
+
+-- LOAD PLANTS DATA
+local seen = {}
+local groups = {}
+local count = 0
+local fruitButtons = {}
+
+local plotFolder = workspace:WaitForChild("Gardens", 10):FindFirstChild("Plot" .. tostring(plotId))
+if plotFolder and plotFolder:FindFirstChild("Plants") then
+	for _, plant in ipairs(plotFolder.Plants:GetChildren()) do
+		local name = plant:GetAttribute("SeedName")
+		if name then
+			if not seen[name] then
+				seen[name] = true
+				groups[name] = {}
+				count = count + 1
+
+				local btn = Instance.new("TextButton")
+				btn.Size = UDim2.new(1, -4, 0, 22) 
+				btn.BackgroundColor3 = Color3.fromRGB(13, 13, 18)
+				btn.TextColor3 = Color3.fromRGB(170, 170, 170)
+				btn.Text = "  > " .. name
+				btn.Font = Enum.Font.GothamBold
+				btn.TextSize = 10
+				btn.TextXAlignment = Enum.TextXAlignment.Left
+				btn.BorderSizePixel = 0
+				btn.Parent = scroll
+
+				Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+				local bStroke = Instance.new("UIStroke")
+				bStroke.Color = Color3.fromRGB(90, 90, 120)
+				bStroke.Thickness = 1
+				bStroke.Transparency = 0.6
+				bStroke.Parent = btn
+
+				fruitButtons[name] = btn
+
+				btn.MouseEnter:Connect(function()
+					if selectedFruit ~= name then
+						TweenService:Create(btn, TweenInfo.new(.1), {BackgroundColor3 = Color3.fromRGB(40, 40, 55)}):Play()
+					end
+				end)
+				btn.MouseLeave:Connect(function()
+					if selectedFruit ~= name then
+						TweenService:Create(btn, TweenInfo.new(.1), {BackgroundColor3 = Color3.fromRGB(13, 13, 18)}):Play()
+					end
+				end)
+
+				btn.MouseButton1Down:Connect(function()
+					for fName, fBtn in pairs(fruitButtons) do
+						fBtn.BackgroundColor3 = Color3.fromRGB(13, 13, 18)
+						fBtn.TextColor3 = Color3.fromRGB(170, 170, 170)
+					end
+					selectedFruit = name
+					btn.BackgroundColor3 = Color3.fromRGB(124, 58, 237)
+					btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+				end)
+			end
+			table.insert(groups[name], plant)
+		end
+	end
+else
+	local noPlantLabel = Instance.new("TextLabel")
+	noPlantLabel.Size = UDim2.new(1, 0, 1, 0)
+	noPlantLabel.BackgroundTransparency = 1
+	noPlantLabel.Text = "❌ No fruits found on your plot"
+	noPlantLabel.TextColor3 = Color3.fromRGB(255, 90, 90)
+	noPlantLabel.Font = Enum.Font.GothamBold
+	noPlantLabel.TextSize = 10
+	noPlantLabel.Parent = scroll
+end
+scroll.CanvasSize = UDim2.new(0, 0, 0, count * 26)
+
+-- FRUIT CHANGER BUTTON
+local button = Instance.new("TextButton")
+button.Name = "FruitChangerButton"
+button.Size = UDim2.new(1, 0, 0, 32) 
+button.BackgroundColor3 = Color3.fromRGB(124, 58, 237)
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Font = Enum.Font.GothamBold
+button.TextSize = 11
+button.Text = "⚡ Fruit Changer"
+button.LayoutOrder = 2
+button.Parent = body
+Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
+
+-- FOOTER
+local footer = Instance.new("Frame")
+footer.Size = UDim2.new(1, 0, 0, 10)
+footer.BackgroundTransparency = 1
+footer.LayoutOrder = 3
+footer.Parent = body
+
+local creditsLabel = Instance.new("TextLabel")
+creditsLabel.Size = UDim2.new(1, 0, 1, 0)
+creditsLabel.BackgroundTransparency = 1
+creditsLabel.Text = "Made by Mark L." -- PINALITANG TEXT AYON SA GUSTO MO
+creditsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+creditsLabel.TextTransparency = 0.6
+creditsLabel.Font = Enum.Font.GothamBold
+creditsLabel.TextSize = 8
+creditsLabel.TextXAlignment = Enum.TextXAlignment.Left
+creditsLabel.Parent = footer
+
+-- DRAG LOGIC
+local dragging, dragInput, dragStart, startPos = false, nil, nil, nil
+
+header.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging  = true
+		dragStart = input.Position
+		startPos  = panel.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+header.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - dragStart
+		panel.Position = UDim2.new(
+			startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+-- OPEN / CLOSE DROPDOWN ROW INTERACTION
+local listIsOpen = false 
+
+toggleBtn.MouseButton1Click:Connect(function()
+	if listIsOpen then
+		listIsOpen = false
+		toggleBtn.Text = "OPEN"
+		toggleBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113) 
+		
+		TweenService:Create(itemRow, TweenInfo.new(0.18), {Size = UDim2.new(1, 0, 0, 26)}):Play()
+		TweenService:Create(panel, TweenInfo.new(0.18), {Size = UDim2.new(0, 240, 0, 115)}):Play()
+	else
+		listIsOpen = true
+		toggleBtn.Text = "CLOSE"
+		toggleBtn.BackgroundColor3 = Color3.fromRGB(124, 58, 237)
+		
+		TweenService:Create(itemRow, TweenInfo.new(0.18), {Size = UDim2.new(1, 0, 0, 110)}):Play()
+		TweenService:Create(panel, TweenInfo.new(0.18), {Size = UDim2.new(0, 240, 0, 200)}):Play()
+	end
+end)
+
+-- Button Animations & Click Logic
+button.MouseEnter:Connect(function()
+	TweenService:Create(button, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(147, 85, 255)}):Play()
+end)
+button.MouseLeave:Connect(function()
+	TweenService:Create(button, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(124, 58, 237)}):Play()
+end)
+
+button.MouseButton1Click:Connect(function()
+	if selectedFruit and groups[selectedFruit] then
+		for _, p in pairs(groups[selectedFruit]) do
+			scaleParts(p)
+		end
+		-- BINAGO: 15x na lang ang madadagdag sa scale multi
+		scaledNames[selectedFruit] = (scaledNames[selectedFruit] or 1) * 3
+		
+		local origText = button.Text
+		button.Text = "✅ Scaled x15!"
+		button.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+		
+		task.wait(0.8)
+		button.Text = origText
+		button.BackgroundColor3 = Color3.fromRGB(124, 58, 237)
+		
+		for _, tool in pairs(LocalPlayer.Backpack:GetChildren()) do
+			if tool:IsA("Tool") then updateTool(tool) end
+		end
+	else
+		button.Text = "❌ Select fruit!"
+		button.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
+		task.wait(0.8)
+		button.Text = "⚡ Fruit Changer"
+		button.BackgroundColor3 = Color3.fromRGB(124, 58, 237)
+	end
+end)
+
+print("✅ DONE: 15x resizing multiplier applied and footer updated to 'Made by Khang.'!")
