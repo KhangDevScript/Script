@@ -39,13 +39,13 @@ WeightFormat.FormatGrams = function(p1)
 	return origFormatGrams(n)
 end
 
--- BINAGO: 3x na lang ang multiplier sa paglaki ng parts
+-- BINAGO: 250x na lang ang multiplier sa paglaki ng parts
 local function scaleParts(model)
 	local fruits = model:FindFirstChild("Fruits")
 	local target = fruits or model
 	for _, part in pairs(target:GetDescendants()) do
 		if part:IsA("BasePart") then
-			part.Size = part.Size * 3
+			part.Size = part.Size * 250
 		end
 	end
 end
