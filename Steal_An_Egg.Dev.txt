@@ -1,0 +1,288 @@
+-- Clean up existing UI if present
+local CoreGui = game:GetService("CoreGui")
+if CoreGui:FindFirstChild("MochiiHubCustom") then
+    CoreGui.MochiiHubCustom:Destroy()
+end
+
+-- Services
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+
+-- Logic Variables
+local markedPosition = nil
+local visualMark = nil
+local isWalking = false
+local bypassEnabled = false
+local isLoading = false
+
+-- Function to Create Ground Marker with Custom Image ID
+local function createGroundShieldMarker(cframe)
+    local model = Instance.new("Model")
+    model.Name = "MochiiGroundCustomMarker"
+
+    -- Base Part na nakadikit sa lapag/daanan
+    local groundPart = Instance.new("Part")
+    groundPart.Name = "GroundBase"
+    groundPart.Shape = Enum.PartType.Block
+    groundPart.Size = Vector3.new(6, 0.2, 6) -- Flat Square na nakalapat sa sahig na may kaunting kapal para kita
+    groundPart.Color = Color3.fromRGB(255, 255, 255)
+    groundPart.Material = Enum.Material.SmoothPlastic
+    groundPart.Transparency = 0 -- Ginawa naming opaque para mas lumitaw ang kulay at linaw ng image
+    groundPart.Anchored = true
+    groundPart.CanCollide = false
+    
+    -- Ipuwesto sa lapag
+    groundPart.CFrame = cframe * CFrame.new(0, -2.8, 0)
+    groundPart.Parent = model
+
+    -- Custom Image Decal na Nakatatak sa Lapag (ID: 119320394429928)
+    local customDecal = Instance.new("Decal")
+    customDecal.Name = "CustomSticker"
+    customDecal.Texture = "rbxassetid://119320394429928"
+    customDecal.Face = Enum.NormalId.Top -- Nakaharap pataas sa sahig
+    customDecal.Parent = groundPart
+
+    model.Parent = workspace
+    return model
+end
+
+-- ScreenGui Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MochiiHubCustom"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+MainFrame.BackgroundTransparency = 0.05
+MainFrame.Position = UDim2.new(0.5, -135, 0.38, -100)
+MainFrame.Size = UDim2.new(0, 270, 0, 0)
+MainFrame.AutomaticSize = Enum.AutomaticSize.Y
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.ClipsDescendants = true
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(45, 45, 45)
+MainStroke.Thickness = 1.5
+MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+MainStroke.Parent = MainFrame
+
+local MainLayout = Instance.new("UIListLayout")
+MainLayout.Parent = MainFrame
+MainLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- Header Bar
+local Header = Instance.new("Frame")
+Header.Name = "Header"
+Header.Parent = MainFrame
+Header.LayoutOrder = 1
+Header.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+Header.Size = UDim2.new(1, 0, 0, 38)
+
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 12)
+HeaderCorner.Parent = Header
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = Header
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 12, 0, 0)
+TitleLabel.Size = UDim2.new(1, -24, 1, 0)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "🍓 Mochii Hub"
+TitleLabel.TextColor3 = Color3.fromRGB(235, 235, 235)
+TitleLabel.TextSize = 16
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Container
+local Container = Instance.new("Frame")
+Container.Name = "Container"
+Container.Parent = MainFrame
+Container.LayoutOrder = 2
+Container.BackgroundTransparency = 1
+Container.Size = UDim2.new(1, 0, 0, 0)
+Container.AutomaticSize = Enum.AutomaticSize.Y
+
+local ContainerPadding = Instance.new("UIPadding")
+ContainerPadding.Parent = Container
+ContainerPadding.PaddingTop = UDim.new(0, 8)
+ContainerPadding.PaddingBottom = UDim.new(0, 6)
+ContainerPadding.PaddingLeft = UDim.new(0, 10)
+ContainerPadding.PaddingRight = UDim.new(0, 10)
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = Container
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 6)
+
+-- Function to Generate Buttons
+local function createColoredButton(text, baseColor, hoverColor)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 36)
+    btn.BackgroundColor3 = baseColor
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 13
+    btn.AutoButtonColor = false
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 7)
+    corner.Parent = btn
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(255, 255, 255)
+    stroke.Transparency = 0.85
+    stroke.Thickness = 1
+    stroke.Parent = btn
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = baseColor}):Play()
+    end)
+    btn.MouseButton1Down:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.08), {Size = UDim2.new(0.97, 0, 0, 34)}):Play()
+    end)
+    btn.MouseButton1Up:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.08), {Size = UDim2.new(1, 0, 0, 36)}):Play()
+    end)
+
+    return btn
+end
+
+-- 1. Set / Remove Marker Button
+local SetMarkBtn = createColoredButton("📍 Set Marker", Color3.fromRGB(45, 125, 220), Color3.fromRGB(65, 145, 240))
+SetMarkBtn.Parent = Container
+SetMarkBtn.LayoutOrder = 1
+
+SetMarkBtn.MouseButton1Click:Connect(function()
+    if not markedPosition then
+        local character = LocalPlayer.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            markedPosition = character.HumanoidRootPart.CFrame 
+
+            if visualMark then visualMark:Destroy() end
+            -- Custom Image Sticker Marker sa Lapag
+            visualMark = createGroundShieldMarker(markedPosition)
+
+            SetMarkBtn.Text = "🗑️ Remove Marker"
+        end
+    else
+        markedPosition = nil
+        if visualMark then
+            visualMark:Destroy()
+            visualMark = nil
+        end
+
+        SetMarkBtn.Text = "📍 Set Marker"
+    end
+end)
+
+-- 2. Go To Marker Button
+local WalkBackBtn = createColoredButton("🏃 Go To Marker", Color3.fromRGB(40, 165, 90), Color3.fromRGB(60, 185, 110))
+WalkBackBtn.Parent = Container
+WalkBackBtn.LayoutOrder = 2
+
+WalkBackBtn.MouseButton1Click:Connect(function()
+    if not markedPosition then
+        WalkBackBtn.Text = "⚠️ No Marker Set!"
+        task.wait(1.2)
+        WalkBackBtn.Text = "🏃 Go To Marker"
+        return
+    end
+
+    if isWalking then return end
+    isWalking = true
+
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChildOfClass("Humanoid") then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+
+        WalkBackBtn.Text = "🏃 Running..."
+
+        local distance = (rootPart.Position - markedPosition.Position).Magnitude
+        local travelTime = distance / 600 
+
+        local tweenInfo = TweenInfo.new(
+            travelTime,
+            Enum.EasingStyle.Linear,
+            Enum.EasingDirection.Out
+        )
+
+        humanoid.PlatformStand = true
+        local tween = TweenService:Create(rootPart, tweenInfo, {CFrame = markedPosition})
+        tween:Play()
+
+        tween.Completed:Wait()
+
+        humanoid.PlatformStand = false
+        WalkBackBtn.Text = "🎉 Success!"
+        task.wait(1.2)
+        WalkBackBtn.Text = "🏃 Go To Marker"
+    end
+    isWalking = false
+end)
+
+-- 3. Bypass Speed Button
+local BypassBtn = createColoredButton("⚡ Bypass Speed", Color3.fromRGB(215, 55, 55), Color3.fromRGB(245, 75, 75))
+BypassBtn.Parent = Container
+BypassBtn.LayoutOrder = 3
+
+BypassBtn.MouseButton1Click:Connect(function()
+    if isLoading or bypassEnabled then return end
+
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    isLoading = true
+    
+    for i = 10, 1, -1 do
+        BypassBtn.Text = "⏳ Bypassing... " .. i .. "s"
+        task.wait(1)
+    end
+
+    local humanoid = character:FindFirstChildOfClass('Humanoid')
+    if humanoid then
+        humanoid:Destroy()
+    end
+
+    local newHumanoid = Instance.new('Humanoid')
+    newHumanoid.Parent = character
+
+    task.wait(0.1)
+    local updatedChar = LocalPlayer.Character
+    if updatedChar then
+        local newH = updatedChar:FindFirstChildOfClass('Humanoid')
+        if newH then
+            newH.WalkSpeed = 300
+        end
+    end
+
+    bypassEnabled = true
+    isLoading = false
+    BypassBtn.Text = "⚡ Bypass Speed: ON 🟢"
+    TweenService:Create(BypassBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(180, 40, 40)}):Play()
+end)
+
+-- 4. Made by Mochii Scripts Text
+local CreditLabel = Instance.new("TextLabel")
+CreditLabel.Name = "CreditLabel"
+CreditLabel.Parent = Container
+CreditLabel.LayoutOrder = 4
+CreditLabel.BackgroundTransparency = 1
+CreditLabel.Size = UDim2.new(1, 0, 0, 14)
+CreditLabel.Font = Enum.Font.GothamMedium
+CreditLabel.Text = "Made by Mochii Scripts"
+CreditLabel.TextColor3 = Color3.fromRGB(140, 140, 140)
+CreditLabel.TextSize = 10
+CreditLabel.TextXAlignment = Enum.TextXAlignment.Center
