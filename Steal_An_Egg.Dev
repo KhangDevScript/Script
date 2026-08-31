@@ -264,7 +264,7 @@ BypassBtn.MouseButton1Click:Connect(function()
     if updatedChar then
         local newH = updatedChar:FindFirstChildOfClass('Humanoid')
         if newH then
-            newH.WalkSpeed = 350
+            newH.WalkSpeed = 300
         end
     end
 
