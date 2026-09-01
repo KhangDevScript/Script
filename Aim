@@ -1,0 +1,566 @@
+--// Khang_Dz
+--// Made By Khang_Dev
+--// Roblox Studio - LocalScript
+--// Đặt trong StarterPlayer > StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+--==================================================
+-- SETTINGS
+--==================================================
+
+local Settings = {
+	ESP = true,
+	BoxESP = true,
+
+	AimAssist = true,
+	AimPart = "Head",
+
+	FOV = 180,
+	Smoothness = 0.18,
+
+	TeamCheck = true,
+	MaxDistance = 1000
+}
+
+local HoldingAim = false
+local ESPObjects = {}
+
+--==================================================
+-- GUI
+--==================================================
+
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "Khang_Dz"
+Gui.ResetOnSpawn = false
+Gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.fromOffset(300, 390)
+Main.Position = UDim2.new(0, 25, 0.5, -195)
+Main.BackgroundColor3 = Color3.fromRGB(18, 22, 18)
+Main.BorderSizePixel = 0
+Main.Parent = Gui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = Main
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(100, 255, 100)
+MainStroke.Thickness = 1.5
+MainStroke.Transparency = 0.2
+MainStroke.Parent = Main
+
+--==================================================
+-- TITLE
+--==================================================
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -20, 0, 45)
+Title.Position = UDim2.fromOffset(10, 5)
+Title.BackgroundTransparency = 1
+Title.Text = "Khang_Dz"
+Title.TextColor3 = Color3.fromRGB(130, 255, 130)
+Title.TextSize = 22
+Title.Font = Enum.Font.GothamBold
+Title.Parent = Main
+
+--==================================================
+-- CREDIT
+--==================================================
+
+local Credit = Instance.new("TextLabel")
+Credit.Size = UDim2.new(1, 0, 0, 20)
+Credit.Position = UDim2.new(0, 0, 1, -27)
+Credit.BackgroundTransparency = 1
+Credit.Text = "Made By Khang_Dev"
+Credit.TextColor3 = Color3.fromRGB(80, 100, 80)
+Credit.TextSize = 11
+Credit.Font = Enum.Font.Gotham
+Credit.Parent = Main
+
+--==================================================
+-- BUTTON CONTAINER
+--==================================================
+
+local Container = Instance.new("Frame")
+Container.Size = UDim2.new(1, -30, 1, -80)
+Container.Position = UDim2.fromOffset(15, 55)
+Container.BackgroundTransparency = 1
+Container.Parent = Main
+
+local Layout = Instance.new("UIListLayout")
+Layout.Padding = UDim.new(0, 7)
+Layout.Parent = Container
+
+--==================================================
+-- BUTTON CREATOR
+--==================================================
+
+local function CreateButton(text, callback)
+	local Button = Instance.new("TextButton")
+
+	Button.Size = UDim2.new(1, 0, 0, 35)
+	Button.BackgroundColor3 = Color3.fromRGB(28, 35, 28)
+	Button.BorderSizePixel = 0
+
+	Button.Text = text
+	Button.TextColor3 = Color3.fromRGB(220, 255, 220)
+	Button.TextSize = 13
+	Button.Font = Enum.Font.GothamSemibold
+
+	Button.AutoButtonColor = false
+	Button.Parent = Container
+
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 6)
+	Corner.Parent = Button
+
+	Button.MouseEnter:Connect(function()
+		Button.BackgroundColor3 = Color3.fromRGB(40, 55, 40)
+	end)
+
+	Button.MouseLeave:Connect(function()
+		Button.BackgroundColor3 = Color3.fromRGB(28, 35, 28)
+	end)
+
+	Button.MouseButton1Click:Connect(callback)
+
+	return Button
+end
+
+local function State(name, value)
+	return name .. ": " .. (value and "ON" or "OFF")
+end
+
+--==================================================
+-- TEAM CHECK
+--==================================================
+
+local function IsEnemy(player)
+	if player == LocalPlayer then
+		return false
+	end
+
+	if Settings.TeamCheck then
+		if LocalPlayer.Team ~= nil and player.Team == LocalPlayer.Team then
+			return false
+		end
+	end
+
+	return true
+end
+
+--==================================================
+-- ESP
+--==================================================
+
+local function RemoveESP(player)
+	local data = ESPObjects[player]
+
+	if not data then
+		return
+	end
+
+	for _, object in pairs(data) do
+		if typeof(object) == "Instance" then
+			object:Destroy()
+		end
+	end
+
+	ESPObjects[player] = nil
+end
+
+local function CreateESP(player)
+	if player == LocalPlayer then
+		return
+	end
+
+	if ESPObjects[player] then
+		return
+	end
+
+	local Highlight = Instance.new("Highlight")
+	Highlight.Name = "KhangDzESP"
+	Highlight.FillColor = Color3.fromRGB(100, 255, 100)
+	Highlight.OutlineColor = Color3.fromRGB(200, 255, 200)
+	Highlight.FillTransparency = 0.75
+	Highlight.OutlineTransparency = 0
+	Highlight.Enabled = false
+	Highlight.Parent = workspace
+
+	local Billboard = Instance.new("BillboardGui")
+	Billboard.Name = "KhangDzBox"
+	Billboard.Size = UDim2.fromOffset(100, 130)
+	Billboard.StudsOffset = Vector3.new(0, 2, 0)
+	Billboard.AlwaysOnTop = true
+	Billboard.Enabled = false
+	Billboard.Parent = workspace
+
+	local Box = Instance.new("Frame")
+	Box.Size = UDim2.fromScale(1, 1)
+	Box.BackgroundTransparency = 1
+	Box.BorderSizePixel = 0
+	Box.Parent = Billboard
+
+	local BoxStroke = Instance.new("UIStroke")
+	BoxStroke.Color = Color3.fromRGB(100, 255, 100)
+	BoxStroke.Thickness = 2
+	BoxStroke.Parent = Box
+
+	local Name = Instance.new("TextLabel")
+	Name.Size = UDim2.new(1, 0, 0, 20)
+	Name.Position = UDim2.fromOffset(0, -23)
+	Name.BackgroundTransparency = 1
+	Name.TextColor3 = Color3.fromRGB(150, 255, 150)
+	Name.TextStrokeTransparency = 0.3
+	Name.TextSize = 12
+	Name.Font = Enum.Font.GothamBold
+	Name.Parent = Box
+
+	ESPObjects[player] = {
+		Highlight = Highlight,
+		Billboard = Billboard,
+		Name = Name
+	}
+end
+
+local function UpdateESP(player)
+	if not ESPObjects[player] then
+		CreateESP(player)
+	end
+
+	local Data = ESPObjects[player]
+
+	if not Data then
+		return
+	end
+
+	local Character = player.Character
+
+	if not Character then
+		Data.Highlight.Enabled = false
+		Data.Billboard.Enabled = false
+		return
+	end
+
+	local Root = Character:FindFirstChild("HumanoidRootPart")
+	local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+
+	if not Root or not Humanoid or Humanoid.Health <= 0 then
+		Data.Highlight.Enabled = false
+		Data.Billboard.Enabled = false
+		return
+	end
+
+	if not Settings.ESP or not IsEnemy(player) then
+		Data.Highlight.Enabled = false
+		Data.Billboard.Enabled = false
+		return
+	end
+
+	local Distance = (Camera.CFrame.Position - Root.Position).Magnitude
+
+	if Distance > Settings.MaxDistance then
+		Data.Highlight.Enabled = false
+		Data.Billboard.Enabled = false
+		return
+	end
+
+	Data.Highlight.Adornee = Character
+	Data.Highlight.Enabled = true
+
+	if Settings.BoxESP then
+		Data.Billboard.Adornee = Root
+		Data.Billboard.Enabled = true
+		Data.Name.Text = player.Name
+	else
+		Data.Billboard.Enabled = false
+	end
+end
+
+--==================================================
+-- FOV
+--==================================================
+
+local FOV = Instance.new("Frame")
+
+FOV.Size = UDim2.fromOffset(
+	Settings.FOV * 2,
+	Settings.FOV * 2
+)
+
+FOV.AnchorPoint = Vector2.new(0.5, 0.5)
+FOV.Position = UDim2.fromScale(0.5, 0.5)
+FOV.BackgroundTransparency = 1
+FOV.Parent = Gui
+
+local FOVCorner = Instance.new("UICorner")
+FOVCorner.CornerRadius = UDim.new(1, 0)
+FOVCorner.Parent = FOV
+
+local FOVStroke = Instance.new("UIStroke")
+FOVStroke.Color = Color3.fromRGB(100, 255, 100)
+FOVStroke.Thickness = 1
+FOVStroke.Transparency = 0.35
+FOVStroke.Parent = FOV
+
+--==================================================
+-- AIM PART
+--==================================================
+
+local function GetAimPart(Character)
+	if not Character then
+		return nil
+	end
+
+	if Settings.AimPart == "Head" then
+		return Character:FindFirstChild("Head")
+	elseif Settings.AimPart == "Neck" then
+		return Character:FindFirstChild("Head")
+	elseif Settings.AimPart == "Body" then
+		return Character:FindFirstChild("UpperTorso")
+			or Character:FindFirstChild("Torso")
+			or Character:FindFirstChild("HumanoidRootPart")
+	end
+
+	return Character:FindFirstChild("Head")
+end
+
+--==================================================
+-- FIND CLOSEST TARGET
+--==================================================
+
+local function GetClosestTarget()
+	local Closest = nil
+	local ClosestDistance = Settings.FOV
+
+	local Center = Vector2.new(
+		Camera.ViewportSize.X / 2,
+		Camera.ViewportSize.Y / 2
+	)
+
+	for _, Player in ipairs(Players:GetPlayers()) do
+		if IsEnemy(Player) then
+			local Character = Player.Character
+
+			local Humanoid = Character
+				and Character:FindFirstChildOfClass("Humanoid")
+
+			local Part = GetAimPart(Character)
+
+			if Humanoid and Humanoid.Health > 0 and Part then
+				local Distance3D =
+					(Camera.CFrame.Position - Part.Position).Magnitude
+
+				if Distance3D <= Settings.MaxDistance then
+					local Position, Visible =
+						Camera:WorldToViewportPoint(Part.Position)
+
+					if Visible then
+						local ScreenDistance =
+							(
+								Vector2.new(
+									Position.X,
+									Position.Y
+								) - Center
+							).Magnitude
+
+						if ScreenDistance < ClosestDistance then
+							ClosestDistance = ScreenDistance
+							Closest = Part
+						end
+					end
+				end
+			end
+		end
+	end
+
+	return Closest
+end
+
+--==================================================
+-- AIM
+--==================================================
+
+local function AimAt(Part)
+	if not Part then
+		return
+	end
+
+	local CameraPosition = Camera.CFrame.Position
+
+	local Target =
+		CFrame.lookAt(
+			CameraPosition,
+			Part.Position
+		)
+
+	Camera.CFrame =
+		Camera.CFrame:Lerp(
+			Target,
+			Settings.Smoothness
+		)
+end
+
+--==================================================
+-- MENU BUTTONS
+--==================================================
+
+local ESPButton
+
+ESPButton = CreateButton(
+	State("ESP", Settings.ESP),
+	function()
+		Settings.ESP = not Settings.ESP
+		ESPButton.Text = State("ESP", Settings.ESP)
+	end
+)
+
+local BoxButton
+
+BoxButton = CreateButton(
+	State("BOX", Settings.BoxESP),
+	function()
+		Settings.BoxESP = not Settings.BoxESP
+		BoxButton.Text = State("BOX", Settings.BoxESP)
+	end
+)
+
+local AimButton
+
+AimButton = CreateButton(
+	State("AIM", Settings.AimAssist),
+	function()
+		Settings.AimAssist = not Settings.AimAssist
+		AimButton.Text = State("AIM", Settings.AimAssist)
+		FOV.Visible = Settings.AimAssist and Main.Visible
+	end
+)
+
+local PartButton
+
+PartButton = CreateButton(
+	"AIM: HEAD",
+	function()
+		if Settings.AimPart == "Head" then
+			Settings.AimPart = "Neck"
+		elseif Settings.AimPart == "Neck" then
+			Settings.AimPart = "Body"
+		else
+			Settings.AimPart = "Head"
+		end
+
+		PartButton.Text =
+			"AIM: " .. string.upper(Settings.AimPart)
+	end
+)
+
+local TeamButton
+
+TeamButton = CreateButton(
+	State("TEAM CHECK", Settings.TeamCheck),
+	function()
+		Settings.TeamCheck = not Settings.TeamCheck
+
+		TeamButton.Text =
+			State("TEAM CHECK", Settings.TeamCheck)
+	end
+)
+
+local FOVButton
+
+FOVButton = CreateButton(
+	"FOV: " .. Settings.FOV,
+	function()
+		Settings.FOV += 30
+
+		if Settings.FOV > 360 then
+			Settings.FOV = 60
+		end
+
+		FOVButton.Text =
+			"FOV: " .. Settings.FOV
+
+		FOV.Size =
+			UDim2.fromOffset(
+				Settings.FOV * 2,
+				Settings.FOV * 2
+			)
+	end
+)
+
+--==================================================
+-- AIM HOLD - RIGHT MOUSE
+--==================================================
+
+UserInputService.InputBegan:Connect(function(Input, Processed)
+	if Processed then
+		return
+	end
+
+	if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+		HoldingAim = true
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(Input)
+	if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+		HoldingAim = false
+	end
+end)
+
+--==================================================
+-- PLAYER CLEANUP
+--==================================================
+
+Players.PlayerRemoving:Connect(function(Player)
+	RemoveESP(Player)
+end)
+
+--==================================================
+-- MAIN LOOP
+--==================================================
+
+RunService.RenderStepped:Connect(function()
+	for _, Player in ipairs(Players:GetPlayers()) do
+		if Player ~= LocalPlayer then
+			UpdateESP(Player)
+		end
+	end
+
+	if Settings.AimAssist and HoldingAim then
+		local Target = GetClosestTarget()
+
+		if Target then
+			AimAt(Target)
+		end
+	end
+end)
+
+--==================================================
+-- RIGHT SHIFT = SHOW / HIDE
+--==================================================
+
+UserInputService.InputBegan:Connect(function(Input, Processed)
+	if Processed then
+		return
+	end
+
+	if Input.KeyCode == Enum.KeyCode.RightShift then
+		Main.Visible = not Main.Visible
+
+		FOV.Visible =
+			Settings.AimAssist
+			and Main.Visible
+	end
+end)
+
+print("Khang_Dz loaded.")
