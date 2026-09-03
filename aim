@@ -1,0 +1,254 @@
+--[[\
+    Universal FPS Script (ESP & Aimbot & Prediction)
+    Supports most Roblox shooter games
+--]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+-- ==================== SETTINGS ====================
+local Settings = {
+    ESP = {
+        Enabled = true,
+        Box = true,
+        Line = true,
+        Name = true,
+        HealthBar = true,
+        TeamCheck = true,
+        Color = Color3.fromRGB(255, 0, 0),
+        TeamColor = Color3.fromRGB(0, 255, 0)
+    },
+    Aimbot = {
+        Enabled = true,
+        Key = Enum.UserInputType.MouseButton2, -- Hold right-click to aim
+        TargetPart = "Head", -- "Head", "Neck", "UpperTorso"
+        Smoothness = 5, -- Aim smoothness (1 = instant lock, higher = smoother)
+        FOV = 360, -- Set to 360 degrees (covers the whole screen)
+        ShowFOV = false,
+        TeamCheck = true
+    },
+    SilentAimGround = {
+        Enabled = true, -- Ground shot prediction feature
+        TriggerKey = Enum.KeyCode.E
+    }
+}
+
+-- ==================== CREATE MAIN MENU & CREDIT ====================
+if CoreGui:FindFirstChild("KhangDevMenu") then
+    CoreGui.KhangDevMenu:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "KhangDevMenu"
+ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Main.BorderSizePixel = 0
+Main.Position = UDim2.new(0.5, -125, 0.5, -100)
+Main.Size = UDim2.new(0, 250, 0, 200)
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 6)
+UICorner.Parent = Main
+
+local Credit = Instance.new("TextLabel")
+Credit.Size = UDim2.new(1, 0, 0, 20)
+Credit.Position = UDim2.new(0, 0, 1, -27)
+Credit.BackgroundTransparency = 1
+Credit.Text = "Made By Khang_Dev"
+Credit.TextColor3 = Color3.fromRGB(80, 100, 80)
+Credit.TextSize = 11
+Credit.Font = Enum.Font.Gotham
+Credit.Parent = Main
+
+-- ==================== ESP SYSTEM ====================
+local ESPList = {}
+
+local function CreateESP(player)
+    if player == LocalPlayer then return end
+    
+    local esp = {
+        Box = Drawing.new("Square"),
+        Line = Drawing.new("Line"),
+        Name = Drawing.new("Text"),
+        Health = Drawing.new("Square"),
+        HealthInner = Drawing.new("Square")
+    }
+    
+    esp.Box.Visible = false
+    esp.Box.Thickness = 1.5
+    esp.Box.Filled = false
+
+    esp.Line.Visible = false
+    esp.Line.Thickness = 1
+
+    esp.Name.Visible = false
+    esp.Name.Size = 14
+    esp.Name.Center = true
+    esp.Name.Outline = true
+    esp.Name.Color = Color3.fromRGB(255, 255, 255)
+
+    esp.Health.Visible = false
+    esp.Health.Thickness = 1
+    esp.Health.Filled = true
+    esp.Health.Color = Color3.fromRGB(0, 0, 0)
+
+    esp.HealthInner.Visible = false
+    esp.HealthInner.Thickness = 1
+    esp.HealthInner.Filled = true
+
+    ESPList[player] = esp
+end
+
+local function RemoveESP(player)
+    if ESPList[player] then
+        for _, obj in pairs(ESPList[player]) do
+            pcall(function() obj:Remove() end)
+        end
+        ESPList[player] = nil
+    end
+end
+
+Players.PlayerRemoving:Connect(RemoveESP)
+for _, p in ipairs(Players:GetPlayers()) do CreateESP(p) end
+Players.PlayerAdded:Connect(CreateESP)
+
+-- ==================== UPDATE ESP ====================
+RunService.RenderStepped:Connect(function()
+    for player, esp in pairs(ESPList) do
+        local character = player.Character
+        local rootPart = character and (character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso"))
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+        
+        local show = false
+        if Settings.ESP.Enabled and character and rootPart and humanoid and humanoid.Health > 0 then
+            if not Settings.ESP.TeamCheck or player.Team ~= LocalPlayer.Team then
+                show = true
+            end
+        end
+
+        if show then
+            local vector, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
+            if onScreen then
+                local head = character:FindFirstChild("Head") or rootPart
+                local headVector = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                local legVector = Camera:WorldToViewportPoint(rootPart.Position - Vector3.new(0, 3, 0))
+                
+                local height = math.abs(headVector.Y - legVector.Y)
+                local width = height / 2
+                local pos = Vector2.new(vector.X - width / 2, headVector.Y)
+
+                -- Box ESP
+                if Settings.ESP.Box then
+                    esp.Box.Visible = true
+                    esp.Box.Size = Vector2.new(width, height)
+                    esp.Box.Position = pos
+                    esp.Box.Color = (player.Team and player.Team == LocalPlayer.Team) and Settings.ESP.TeamColor or Settings.ESP.Color
+                else
+                    esp.Box.Visible = false
+                end
+
+                -- Line ESP
+                if Settings.ESP.Line then
+                    esp.Line.Visible = true
+                    esp.Line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                    esp.Line.To = Vector2.new(vector.X, legVector.Y)
+                    esp.Line.Color = esp.Box.Color
+                else
+                    esp.Line.Visible = false
+                end
+
+                -- Name ESP
+                if Settings.ESP.Name then
+                    esp.Name.Visible = true
+                    esp.Name.Text = player.Name
+                    esp.Name.Position = Vector2.new(vector.X, pos.Y - 18)
+                else
+                    esp.Name.Visible = false
+                end
+
+                -- Health Bar
+                if Settings.ESP.HealthBar then
+                    local healthPercent = humanoid.Health / humanoid.MaxHealth
+                    esp.Health.Visible = true
+                    esp.Health.Size = Vector2.new(2, height)
+                    esp.Health.Position = Vector2.new(pos.X - 6, pos.Y)
+
+                    esp.HealthInner.Visible = true
+                    esp.HealthInner.Size = Vector2.new(2, height * healthPercent)
+                    esp.HealthInner.Position = Vector2.new(pos.X - 6, pos.Y + (height * (1 - healthPercent)))
+                    esp.HealthInner.Color = Color3.fromRGB(255 * (1 - healthPercent), 255 * healthPercent, 0)
+                else
+                    esp.Health.Visible = false
+                    esp.HealthInner.Visible = false
+                end
+            else
+                for _, obj in pairs(esp) do obj.Visible = false end
+            end
+        else
+            for _, obj in pairs(esp) do obj.Visible = false end
+        end
+    end
+end)
+
+-- ==================== AIMBOT & SILENT AIM ====================
+local function GetClosestPlayerInFOV()
+    local target = nil
+    local shortestDist = math.huge
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            if not Settings.Aimbot.TeamCheck or player.Team ~= LocalPlayer.Team then
+                local char = player.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if char and hum and hum.Health > 0 then
+                    local partName = Settings.Aimbot.TargetPart
+                    local targetPart = char:FindFirstChild(partName) or char:FindFirstChild("Head")
+                    
+                    if targetPart then
+                        local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                        if onScreen then
+                            local mousePos = UserInputService:GetMouseLocation()
+                            local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                            if dist < shortestDist then
+                                shortestDist = dist
+                                target = targetPart
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return target
+end
+
+RunService.RenderStepped:Connect(function()
+    if Settings.Aimbot.Enabled and UserInputService:IsMouseButtonPressed(Settings.Aimbot.Key) then
+        local targetPart = GetClosestPlayerInFOV()
+        if targetPart then
+            local cameraCFrame = Camera.CFrame
+            local targetCFrame = CFrame.new(cameraCFrame.Position, targetPart.Position)
+            Camera.CFrame = cameraCFrame:Lerp(targetCFrame, 1 / Settings.Aimbot.Smoothness)
+        end
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and Settings.SilentAimGround.Enabled and input.KeyCode == Settings.SilentAimGround.TriggerKey then
+        local targetPart = GetClosestPlayerInFOV()
+        if targetPart then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
+        end
+    end
+end)
+
+print("Khang_Dz Load!!!")
