@@ -19,12 +19,12 @@ local Settings = {
 
 	AimAssist = true,
 	AimPart = "Head",
-	Smoothness = 0.35,
+	Smoothness = 1.0, -- Đặt tối đa để tâm tự động lia thẳng dính sát vào mục tiêu ngay lập tức
 
 	SilentAimGround = true,
 	SilentAimKey = Enum.KeyCode.E,
 
-	MaxDistance = 999999 -- Không giới hạn khoảng cách (Quét toàn bộ map)
+	MaxDistance = 100000 -- Nâng khoảng cách ESP lên tối đa 100,000 studs (phủ toàn bộ bản đồ cực rộng)
 }
 
 local HoldingAim = false
@@ -312,7 +312,7 @@ local function UpdateESP(player)
 end
 
 --==================================================
--- AIMBOT & SILENT AIM LOGIC
+-- AIMBOT & SILENT AIM LOGIC (TỰ ĐỘNG LIA TÂM GẦN NHẤT)
 --==================================================
 
 local function GetAimPart(Character)
@@ -338,22 +338,18 @@ local function GetClosestTarget()
 	for _, Player in ipairs(Players:GetPlayers()) do
 		if Player ~= LocalPlayer then
 			local Character = Player.Character
+			local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
 			local Part = GetAimPart(Character)
 
-			if Part then
+			-- Kiểm tra người chơi còn sống và có phần cơ thể hợp lệ
+			if Humanoid and Humanoid.Health > 0 and Part then
 				local Distance3D = (Camera.CFrame.Position - Part.Position).Magnitude
 
 				if Distance3D <= Settings.MaxDistance then
-					local Position, Visible = Camera:WorldToViewportPoint(Part.Position)
-
-					if Visible then
-						local mousePos = UserInputService:GetMouseLocation()
-						local ScreenDistance = (Vector2.new(Position.X, Position.Y) - mousePos).Magnitude
-
-						if ScreenDistance < ClosestDistance then
-							ClosestDistance = ScreenDistance
-							Closest = Part
-						end
+					-- Ưu tiên tìm mục tiêu có khoảng cách 3D thực tế gần người chơi nhất trên toàn map
+					if Distance3D < ClosestDistance then
+						ClosestDistance = Distance3D
+						Closest = Part
 					end
 				end
 			end
@@ -367,6 +363,7 @@ local function AimAt(Part)
 	if not Part then return end
 	local CameraPosition = Camera.CFrame.Position
 	local Target = CFrame.lookAt(CameraPosition, Part.Position)
+	-- Lia tâm thẳng dính ngay lập tức sang mục tiêu gần nhất
 	Camera.CFrame = Camera.CFrame:Lerp(Target, Settings.Smoothness)
 end
 
@@ -487,4 +484,4 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
-print("Khang_Dz.")
+print("Khang_Dz loaded.")
