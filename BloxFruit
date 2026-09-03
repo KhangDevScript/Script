@@ -1,0 +1,134 @@
+repeat task.wait() until game:IsLoaded()
+
+_G.ThemeID = _G.ThemeID or nil
+_G.AutoTranslate = (_G.AutoTranslate == nil) and true or _G.AutoTranslate
+_G.SaveConfig = (_G.SaveConfig == nil) and true or _G.SaveConfig
+
+local HttpService = game:GetService("HttpService")
+local StarterGui = game:GetService("StarterGui")
+local CoreGui = game:GetService("CoreGui")
+
+local function Notify(title, text, time)
+    StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = time or 3
+    })
+end
+
+-- Tạo Kaitun Tracker UI giống mẫu
+if CoreGui:FindFirstChild("KaitunTrackerUI") then
+    CoreGui.KaitunTrackerUI:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "KaitunTrackerUI"
+ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local Container = Instance.new("Frame")
+Container.Name = "Container"
+Container.Parent = ScreenGui
+Container.BackgroundTransparency = 1
+Container.Position = UDim2.new(0.5, -250, 0.05, 0)
+Container.Size = UDim2.new(0, 500, 0, 250)
+
+local function CreateLabel(name, posY, sizeY, font, textSize, color)
+    local lbl = Instance.new("TextLabel")
+    lbl.Name = name
+    lbl.Parent = Container
+    lbl.BackgroundTransparency = 1
+    lbl.Position = UDim2.new(0, 0, 0, posY)
+    lbl.Size = UDim2.new(1, 0, 0, sizeY)
+    lbl.Font = font
+    lbl.TextSize = textSize
+    lbl.TextColor3 = color
+    lbl.TextStrokeTransparency = 0.5
+    lbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    lbl.TextXAlignment = Enum.TextXAlignment.Center
+    return lbl
+end
+
+local loadStartTime = tick()
+local LoadedLabel = CreateLabel("LoadedLabel", 0, 25, Enum.Font.GothamBold, 14, Color3.fromRGB(255, 255, 255))
+LoadedLabel.Text = "Loaded In 0.00ms!"
+
+local MainTaskLabel = CreateLabel("MainTaskLabel", 35, 25, Enum.Font.GothamBold, 14, Color3.fromRGB(255, 255, 255))
+MainTaskLabel.Text = "MainTask : Initializing Loader..."
+
+local SubTaskLabel = CreateLabel("SubTaskLabel", 70, 25, Enum.Font.GothamBold, 14, Color3.fromRGB(255, 255, 255))
+SubTaskLabel.Text = "SubTask : Checking UniverseID..."
+
+local StatsLabel = CreateLabel("StatsLabel", 105, 25, Enum.Font.GothamBold, 14, Color3.fromRGB(255, 255, 255))
+StatsLabel.RichText = true
+StatsLabel.Text = '<font color="#ffaa00">Beli:</font> 0 <font color="#00ffaa">Level:</font> 0 <font color="#aa55ff">Fragments:</font> 0'
+
+local CombatLabel = CreateLabel("CombatLabel", 140, 25, Enum.Font.GothamBold, 14, Color3.fromRGB(255, 255, 255))
+CombatLabel.Text = "Combat: Ready"
+
+local TimeLabel = CreateLabel("TimeLabel", 175, 25, Enum.Font.GothamBold, 13, Color3.fromRGB(255, 255, 255))
+TimeLabel.Text = "Total Elapsed Time: 0day, 0hrs, 0min, 0sec. Elapsed Time: 0day, 0hrs, 0min, 0sec"
+
+task.spawn(function()
+    local startTime = tick()
+    local taskStartTime = tick()
+    
+    LoadedLabel.Text = string.format("Loaded In %sms!", tostring((tick() - loadStartTime) * 1000))
+    
+    while task.wait(1) do
+        local totalSec = math.floor(tick() - startTime)
+        local totalDays = math.floor(totalSec / 86400)
+        local totalHours = math.floor((totalSec % 86400) / 3600)
+        local totalMins = math.floor((totalSec % 3600) / 60)
+        local totalSecs = totalSec % 60
+        
+        local taskSec = math.floor(tick() - taskStartTime)
+        local taskDays = math.floor(taskSec / 86400)
+        local taskHours = math.floor((taskSec % 86400) / 3600)
+        local taskMins = math.floor((taskSec % 3600) / 60)
+        local taskSecs = taskSec % 60
+        
+        TimeLabel.Text = string.format(
+            "Total Elapsed Time: %dday, %dhrs, %dmin, %dsec. Elapsed Time: %dday, %dhrs, %dmin, %dsec",
+            totalDays, totalHours, totalMins, totalSecs,
+            taskDays, taskHours, taskMins, taskSecs
+        )
+    end
+end)
+
+local UniverseID
+local success, result = pcall(function()
+    return HttpService:JSONDecode(
+        game:HttpGet("https://apis.roblox.com/universes/v1/places/"..game.PlaceId.."/universe")
+    )
+end)
+
+if success and result then
+    UniverseID = result.universeId
+    MainTaskLabel.Text = "MainTask : UniverseID Checked (" .. tostring(UniverseID) .. ")"
+else
+    SubTaskLabel.Text = "SubTask : Lỗi lấy UniverseID"
+    Notify("Bamia Hub", "Lỗi lấy UniverseID", 5)
+    return
+end
+
+if UniverseID == 994732206 then
+    SubTaskLabel.Text = "SubTask : Loading Welcome Notification..."
+    
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Graihub/notifywelcome/refs/heads/main/Gaynotify"))()
+    end)
+
+    Notify("Khang_Dev Hub", "Khang_Dz", 3)
+    task.wait(2)
+
+    Notify("Khang_Dev Hub", "Loader Success!", 5)
+    SubTaskLabel.Text = "SubTask : Loading Kaitun Script..."
+    task.wait(1)
+
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Graihub/kaitun/refs/heads/main/Bamia.lua.txt"))()
+else
+    MainTaskLabel.Text = "MainTask : Unsupported Game"
+    SubTaskLabel.Text = "SubTask : UniverseID mismatch"
+    Notify("Khang_Dev Hub", "Game không hỗ trợ!", 3)
+end
