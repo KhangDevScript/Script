@@ -24,7 +24,7 @@ local Settings = {
 	SilentAimGround = true,
 	SilentAimKey = Enum.KeyCode.E,
 
-	MaxDistance = 5000
+	MaxDistance = 999999 -- Không giới hạn khoảng cách (Quét toàn bộ map)
 }
 
 local HoldingAim = false
@@ -249,10 +249,10 @@ local function UpdateESP(player)
 		return
 	end
 
-	local Root = Character:FindFirstChild("HumanoidRootPart")
+	local Root = Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head")
 	local Humanoid = Character:FindFirstChildOfClass("Humanoid")
 
-	if not Root or not Humanoid then
+	if not Root then
 		Data.Highlight.Enabled = false
 		Data.Billboard.Enabled = false
 		Data.Line.Visible = false
@@ -287,7 +287,7 @@ local function UpdateESP(player)
 		Data.Box.Visible = false
 	end
 
-	if Settings.HealthBar and Humanoid.MaxHealth > 0 then
+	if Settings.HealthBar and Humanoid and Humanoid.MaxHealth > 0 then
 		local healthPercent = math.clamp(Humanoid.Health / Humanoid.MaxHealth, 0, 1)
 		Data.HealthBarFill.Size = UDim2.new(1, 0, healthPercent, 0)
 		Data.HealthBarFill.Position = UDim2.new(0, 0, 1 - healthPercent, 0)
@@ -338,10 +338,9 @@ local function GetClosestTarget()
 	for _, Player in ipairs(Players:GetPlayers()) do
 		if Player ~= LocalPlayer then
 			local Character = Player.Character
-			local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
 			local Part = GetAimPart(Character)
 
-			if Humanoid and Humanoid.Health > 0 and Part then
+			if Part then
 				local Distance3D = (Camera.CFrame.Position - Part.Position).Magnitude
 
 				if Distance3D <= Settings.MaxDistance then
@@ -488,4 +487,4 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
-print("Khang_Dz loaded.")
+print("Khang_Dz.")
