@@ -1,4 +1,4 @@
--- Khang_Devdz Kaitun BFVip Ultimate (Check Active Code/Cooldown Fix)
+-- Khang_Devdz Kaitun BFVip Ultimate (English + Green Theme UI)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -18,16 +18,21 @@ ScreenGui.Name = "KhangKaitunBFVipHub"
 ScreenGui.Parent = PlayerGui
 ScreenGui.ResetOnSpawn = false
 
--- Key System Window
+-- Key System Window (Green Theme)
 local KeySystemFrame = Instance.new("Frame")
 KeySystemFrame.Size = UDim2.new(0, 420, 0, 240)
 KeySystemFrame.Position = UDim2.new(0.5, -210, 0.5, -120)
-KeySystemFrame.BackgroundColor3 = Color3.fromRGB(13, 15, 19)
+KeySystemFrame.BackgroundColor3 = Color3.fromRGB(13, 18, 15)
 KeySystemFrame.BorderSizePixel = 0
 KeySystemFrame.Active = true
 KeySystemFrame.Draggable = true
 KeySystemFrame.Parent = ScreenGui
 Instance.new("UICorner", KeySystemFrame).CornerRadius = UDim.new(0, 10)
+
+local KeySystemStroke = Instance.new("UIStroke")
+KeySystemStroke.Color = Color3.fromRGB(0, 255, 100)
+KeySystemStroke.Thickness = 1.5
+KeySystemStroke.Parent = KeySystemFrame
 
 local KeyTitle = Instance.new("TextLabel")
 KeyTitle.Size = UDim2.new(1, -20, 0, 45)
@@ -43,7 +48,7 @@ KeyTitle.Parent = KeySystemFrame
 local KeyBox = Instance.new("TextBox")
 KeyBox.Size = UDim2.new(1, -40, 0, 40)
 KeyBox.Position = UDim2.new(0, 20, 0, 60)
-KeyBox.BackgroundColor3 = Color3.fromRGB(18, 21, 26)
+KeyBox.BackgroundColor3 = Color3.fromRGB(18, 25, 20)
 KeyBox.BorderSizePixel = 0
 KeyBox.Font = Enum.Font.Gotham
 KeyBox.PlaceholderText = "Paste your key here..."
@@ -54,14 +59,19 @@ KeyBox.ClearTextOnFocus = false
 KeyBox.Parent = KeySystemFrame
 Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 6)
 
+local KeyBoxStroke = Instance.new("UIStroke")
+KeyBoxStroke.Color = Color3.fromRGB(0, 200, 80)
+KeyBoxStroke.Thickness = 1
+KeyBoxStroke.Parent = KeyBox
+
 local GetKeyBtn = Instance.new("TextButton")
 GetKeyBtn.Size = UDim2.new(0.48, -10, 0, 38)
 GetKeyBtn.Position = UDim2.new(0, 20, 0, 115)
-GetKeyBtn.BackgroundColor3 = Color3.fromRGB(30, 35, 45)
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(20, 35, 25)
 GetKeyBtn.BorderSizePixel = 0
 GetKeyBtn.Font = Enum.Font.GothamSemibold
 GetKeyBtn.Text = "Get Key"
-GetKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+GetKeyBtn.TextColor3 = Color3.fromRGB(0, 255, 100)
 GetKeyBtn.TextSize = 13
 GetKeyBtn.Parent = KeySystemFrame
 Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 6)
@@ -84,7 +94,7 @@ StatusLabel.Position = UDim2.new(0, 20, 0, 170)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.Font = Enum.Font.GothamMedium
 StatusLabel.Text = "Status: Waiting for key..."
-StatusLabel.TextColor3 = Color3.fromRGB(130, 140, 150)
+StatusLabel.TextColor3 = Color3.fromRGB(130, 170, 140)
 StatusLabel.TextSize = 11
 StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
 StatusLabel.Parent = KeySystemFrame
@@ -100,18 +110,23 @@ GetKeyBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Main Hub Window
+-- Main Hub Window (Green Accent Theme)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 480, 0, 330)
 MainFrame.Position = UDim2.new(0.5, -240, 0.5, -165)
-MainFrame.BackgroundColor3 = Color3.fromRGB(13, 15, 19)
+MainFrame.BackgroundColor3 = Color3.fromRGB(13, 18, 15)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+
+local MainFrameStroke = Instance.new("UIStroke")
+MainFrameStroke.Color = Color3.fromRGB(0, 255, 100)
+MainFrameStroke.Thickness = 1.5
+MainFrameStroke.Parent = MainFrame
 
 local ProfileContainer = Instance.new("Frame")
 ProfileContainer.Size = UDim2.new(0, 200, 0, 50)
@@ -122,7 +137,7 @@ ProfileContainer.Parent = MainFrame
 local AvatarIcon = Instance.new("ImageLabel")
 AvatarIcon.Size = UDim2.new(0, 32, 0, 32)
 AvatarIcon.Position = UDim2.new(0, 15, 0, 10)
-AvatarIcon.BackgroundColor3 = Color3.fromRGB(25, 30, 40)
+AvatarIcon.BackgroundColor3 = Color3.fromRGB(20, 35, 25)
 AvatarIcon.Image = "rbxassetid://6034287593"
 AvatarIcon.Parent = ProfileContainer
 Instance.new("UICorner", AvatarIcon).CornerRadius = UDim.new(1, 0)
@@ -144,7 +159,7 @@ HeaderSub.Position = UDim2.new(0, 55, 0, 27)
 HeaderSub.BackgroundTransparency = 1
 HeaderSub.Font = Enum.Font.Gotham
 HeaderSub.Text = "Khang_Devdz Framework"
-HeaderSub.TextColor3 = Color3.fromRGB(110, 120, 130)
+HeaderSub.TextColor3 = Color3.fromRGB(110, 150, 125)
 HeaderSub.TextSize = 9
 HeaderSub.TextXAlignment = Enum.TextXAlignment.Left
 HeaderSub.Parent = ProfileContainer
@@ -179,7 +194,7 @@ local function createToggle(parent, labelText, posY, callback)
     ToggleLabel.BackgroundTransparency = 1
     ToggleLabel.Font = Enum.Font.GothamMedium
     ToggleLabel.Text = labelText
-    ToggleLabel.TextColor3 = Color3.fromRGB(200, 210, 220)
+    ToggleLabel.TextColor3 = Color3.fromRGB(200, 220, 205)
     ToggleLabel.TextSize = 12
     ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
     ToggleLabel.Parent = parent
@@ -187,7 +202,7 @@ local function createToggle(parent, labelText, posY, callback)
     local ToggleBg = Instance.new("TextButton")
     ToggleBg.Size = UDim2.new(0, 40, 0, 20)
     ToggleBg.Position = UDim2.new(1, -55, 0, 5)
-    ToggleBg.BackgroundColor3 = Color3.fromRGB(50, 55, 65)
+    ToggleBg.BackgroundColor3 = Color3.fromRGB(40, 55, 45)
     ToggleBg.Text = ""
     ToggleBg.AutoButtonColor = false
     ToggleBg.Parent = parent
@@ -207,7 +222,7 @@ local function createToggle(parent, labelText, posY, callback)
             ToggleBg.BackgroundColor3 = Color3.fromRGB(0, 220, 80)
             ToggleCircle:TweenPosition(UDim2.new(1, -18, 0, 2), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.15, true)
         else
-            ToggleBg.BackgroundColor3 = Color3.fromRGB(50, 55, 65)
+            ToggleBg.BackgroundColor3 = Color3.fromRGB(40, 55, 45)
             ToggleCircle:TweenPosition(UDim2.new(0, 2, 0, 2), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.15, true)
         end
         if callback then callback(toggled) end
@@ -217,7 +232,7 @@ end
 local KaitunSection = Instance.new("Frame")
 KaitunSection.Size = UDim2.new(1, 0, 0, 235)
 KaitunSection.Position = UDim2.new(0, 0, 0, 0)
-KaitunSection.BackgroundColor3 = Color3.fromRGB(18, 21, 26)
+KaitunSection.BackgroundColor3 = Color3.fromRGB(18, 25, 20)
 KaitunSection.BorderSizePixel = 0
 KaitunSection.Parent = ContentContainer
 Instance.new("UICorner", KaitunSection).CornerRadius = UDim.new(0, 8)
@@ -246,13 +261,13 @@ end)
 createToggle(KaitunSection, "Orbit Fly (No Animation)", 75, function(state)
     _G.OrbitFly = state
 end)
-createToggle(KaitunSection, "Bring Mobs (Gom quái)", 115, function(state)
+createToggle(KaitunSection, "Bring Mobs", 115, function(state)
     _G.BringMobs = state
 end)
 createToggle(KaitunSection, "Auto Stats (Energy -> Health -> Fruit...)", 155, function(state)
     _G.AutoStats = state
 end)
-createToggle(KaitunSection, "Auto Redeem Codes (Kiểm tra thời hạn x2)", 195, function(state)
+createToggle(KaitunSection, "Auto Redeem Codes (Check Expires)", 195, function(state)
     _G.AutoCode = state
 end)
 
@@ -355,7 +370,6 @@ task.spawn(function()
     end
 end)
 
--- Auto Redeem Codes System (Chỉ nhập code khi thời gian x2 EXP chưa có hoặc đã hết hạn)
 task.spawn(function()
     local bloxCodes = {
         "ADMIN_STRENGTH", "Sub2Fer999", "Enyu_is_Pro", "Magicbus", "JCWK", 
@@ -368,19 +382,16 @@ task.spawn(function()
     while task.wait(5) do
         if _G.AutoCode or _G.Kaitun1ToMax then
             pcall(function()
-                -- Kiểm tra thời gian x2 kinh nghiệm (ExpExpires hoặc các thuộc tính thời gian tương tự trong Data)
                 local dataFolder = LocalPlayer:FindFirstChild("Data")
                 local hasActiveExp = false
                 
                 if dataFolder then
-                    -- Kiểm tra nếu có thông số thời gian x2 EXP còn hạn (ví dụ > 0)
                     local expTime = dataFolder:FindFirstChild("ExpExpires") or dataFolder:FindFirstChild("DoubleExpTime")
                     if expTime and expTime.Value and expTime.Value > os.time() then
                         hasActiveExp = true
                     end
                 end
 
-                -- Nếu người chơi chưa có thời gian x2 hoặc đã hết thời gian thì mới tiến hành nhập code
                 if not hasActiveExp then
                     local remotes = ReplicatedStorage:FindFirstChild("Remotes") or ReplicatedStorage
                     local codeRemote = remotes:FindFirstChild("CommF_")
