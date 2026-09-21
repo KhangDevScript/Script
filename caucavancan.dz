@@ -1,0 +1,400 @@
+-- Khang_Devdz Kaitun BFVip Ultimate (Check Active Code/Cooldown Fix)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local CORRECT_KEY = "Khang_Dzzzzzzzz9393939367676676767676736363636363663igJUIUTiYiT£\"£\"\"£\"£%£^%$^%$::@:@:L@%&^$%^$^$^+++++++++++++++++*^&%&^&*&"""""""""""^^^^^^^^^^^^^&^*&^&^&^&^&^"
+
+print("Khang Hub: Starting initialization...")
+
+if PlayerGui:FindFirstChild("KhangKaitunBFVipHub") then
+    PlayerGui.KhangKaitunBFVipHub:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "KhangKaitunBFVipHub"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+
+-- Key System Window
+local KeySystemFrame = Instance.new("Frame")
+KeySystemFrame.Size = UDim2.new(0, 420, 0, 240)
+KeySystemFrame.Position = UDim2.new(0.5, -210, 0.5, -120)
+KeySystemFrame.BackgroundColor3 = Color3.fromRGB(13, 15, 19)
+KeySystemFrame.BorderSizePixel = 0
+KeySystemFrame.Active = true
+KeySystemFrame.Draggable = true
+KeySystemFrame.Parent = ScreenGui
+Instance.new("UICorner", KeySystemFrame).CornerRadius = UDim.new(0, 10)
+
+local KeyTitle = Instance.new("TextLabel")
+KeyTitle.Size = UDim2.new(1, -20, 0, 45)
+KeyTitle.Position = UDim2.new(0, 20, 0, 0)
+KeyTitle.BackgroundTransparency = 1
+KeyTitle.Font = Enum.Font.GothamBold
+KeyTitle.Text = "Khang_Devdz - Key System"
+KeyTitle.TextColor3 = Color3.fromRGB(0, 255, 100)
+KeyTitle.TextSize = 14
+KeyTitle.TextXAlignment = Enum.TextXAlignment.Left
+KeyTitle.Parent = KeySystemFrame
+
+local KeyBox = Instance.new("TextBox")
+KeyBox.Size = UDim2.new(1, -40, 0, 40)
+KeyBox.Position = UDim2.new(0, 20, 0, 60)
+KeyBox.BackgroundColor3 = Color3.fromRGB(18, 21, 26)
+KeyBox.BorderSizePixel = 0
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.PlaceholderText = "Paste your key here..."
+KeyBox.Text = ""
+KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyBox.TextSize = 12
+KeyBox.ClearTextOnFocus = false
+KeyBox.Parent = KeySystemFrame
+Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 6)
+
+local GetKeyBtn = Instance.new("TextButton")
+GetKeyBtn.Size = UDim2.new(0.48, -10, 0, 38)
+GetKeyBtn.Position = UDim2.new(0, 20, 0, 115)
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(30, 35, 45)
+GetKeyBtn.BorderSizePixel = 0
+GetKeyBtn.Font = Enum.Font.GothamSemibold
+GetKeyBtn.Text = "Get Key"
+GetKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+GetKeyBtn.TextSize = 13
+GetKeyBtn.Parent = KeySystemFrame
+Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 6)
+
+local VerifyBtn = Instance.new("TextButton")
+VerifyBtn.Size = UDim2.new(0.48, -10, 0, 38)
+VerifyBtn.Position = UDim2.new(0.5, 5, 0, 115)
+VerifyBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 80)
+VerifyBtn.BorderSizePixel = 0
+VerifyBtn.Font = Enum.Font.GothamSemibold
+VerifyBtn.Text = "Verify Key"
+VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+VerifyBtn.TextSize = 13
+VerifyBtn.Parent = KeySystemFrame
+Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 6)
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, -40, 0, 25)
+StatusLabel.Position = UDim2.new(0, 20, 0, 170)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Font = Enum.Font.GothamMedium
+StatusLabel.Text = "Status: Waiting for key..."
+StatusLabel.TextColor3 = Color3.fromRGB(130, 140, 150)
+StatusLabel.TextSize = 11
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+StatusLabel.Parent = KeySystemFrame
+
+GetKeyBtn.MouseButton1Click:Connect(function()
+    if setclipboard then
+        setclipboard(CORRECT_KEY)
+        StatusLabel.Text = "Status: Key copied to clipboard!"
+        StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+    else
+        StatusLabel.Text = "Status: Executor does not support clipboard!"
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+    end
+end)
+
+-- Main Hub Window
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 480, 0, 330)
+MainFrame.Position = UDim2.new(0.5, -240, 0.5, -165)
+MainFrame.BackgroundColor3 = Color3.fromRGB(13, 15, 19)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = false
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+
+local ProfileContainer = Instance.new("Frame")
+ProfileContainer.Size = UDim2.new(0, 200, 0, 50)
+ProfileContainer.Position = UDim2.new(0, 0, 0, 0)
+ProfileContainer.BackgroundTransparency = 1
+ProfileContainer.Parent = MainFrame
+
+local AvatarIcon = Instance.new("ImageLabel")
+AvatarIcon.Size = UDim2.new(0, 32, 0, 32)
+AvatarIcon.Position = UDim2.new(0, 15, 0, 10)
+AvatarIcon.BackgroundColor3 = Color3.fromRGB(25, 30, 40)
+AvatarIcon.Image = "rbxassetid://6034287593"
+AvatarIcon.Parent = ProfileContainer
+Instance.new("UICorner", AvatarIcon).CornerRadius = UDim.new(1, 0)
+
+local HeaderTitle = Instance.new("TextLabel")
+HeaderTitle.Size = UDim2.new(0, 140, 0, 18)
+HeaderTitle.Position = UDim2.new(0, 55, 0, 9)
+HeaderTitle.BackgroundTransparency = 1
+HeaderTitle.Font = Enum.Font.GothamBold
+HeaderTitle.Text = "Kaitun BFVip"
+HeaderTitle.TextColor3 = Color3.fromRGB(0, 255, 100)
+HeaderTitle.TextSize = 13
+HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
+HeaderTitle.Parent = ProfileContainer
+
+local HeaderSub = Instance.new("TextLabel")
+HeaderSub.Size = UDim2.new(0, 140, 0, 15)
+HeaderSub.Position = UDim2.new(0, 55, 0, 27)
+HeaderSub.BackgroundTransparency = 1
+HeaderSub.Font = Enum.Font.Gotham
+HeaderSub.Text = "Khang_Devdz Framework"
+HeaderSub.TextColor3 = Color3.fromRGB(110, 120, 130)
+HeaderSub.TextSize = 9
+HeaderSub.TextXAlignment = Enum.TextXAlignment.Left
+HeaderSub.Parent = ProfileContainer
+
+local CloseMainBtn = Instance.new("TextButton")
+CloseMainBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseMainBtn.Position = UDim2.new(1, -35, 0, 10)
+CloseMainBtn.BackgroundTransparency = 1
+CloseMainBtn.Font = Enum.Font.GothamBold
+CloseMainBtn.Text = "✕"
+CloseMainBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+CloseMainBtn.TextSize = 13
+CloseMainBtn.Parent = MainFrame
+
+CloseMainBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+local ContentContainer = Instance.new("ScrollingFrame")
+ContentContainer.Size = UDim2.new(1, -30, 1, -70)
+ContentContainer.Position = UDim2.new(0, 15, 0, 55)
+ContentContainer.BackgroundTransparency = 1
+ContentContainer.BorderSizePixel = 0
+ContentContainer.CanvasSize = UDim2.new(0, 0, 0, 245)
+ContentContainer.ScrollBarThickness = 3
+ContentContainer.Parent = MainFrame
+
+local function createToggle(parent, labelText, posY, callback)
+    local ToggleLabel = Instance.new("TextLabel")
+    ToggleLabel.Size = UDim2.new(1, -70, 0, 30)
+    ToggleLabel.Position = UDim2.new(0, 15, 0, posY)
+    ToggleLabel.BackgroundTransparency = 1
+    ToggleLabel.Font = Enum.Font.GothamMedium
+    ToggleLabel.Text = labelText
+    ToggleLabel.TextColor3 = Color3.fromRGB(200, 210, 220)
+    ToggleLabel.TextSize = 12
+    ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    ToggleLabel.Parent = parent
+
+    local ToggleBg = Instance.new("TextButton")
+    ToggleBg.Size = UDim2.new(0, 40, 0, 20)
+    ToggleBg.Position = UDim2.new(1, -55, 0, 5)
+    ToggleBg.BackgroundColor3 = Color3.fromRGB(50, 55, 65)
+    ToggleBg.Text = ""
+    ToggleBg.AutoButtonColor = false
+    ToggleBg.Parent = parent
+    Instance.new("UICorner", ToggleBg).CornerRadius = UDim.new(1, 0)
+
+    local ToggleCircle = Instance.new("Frame")
+    ToggleCircle.Size = UDim2.new(0, 16, 0, 16)
+    ToggleCircle.Position = UDim2.new(0, 2, 0, 2)
+    ToggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleCircle.Parent = ToggleBg
+    Instance.new("UICorner", ToggleCircle).CornerRadius = UDim.new(1, 0)
+
+    local toggled = false
+    ToggleBg.MouseButton1Click:Connect(function()
+        toggled = not toggled
+        if toggled then
+            ToggleBg.BackgroundColor3 = Color3.fromRGB(0, 220, 80)
+            ToggleCircle:TweenPosition(UDim2.new(1, -18, 0, 2), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.15, true)
+        else
+            ToggleBg.BackgroundColor3 = Color3.fromRGB(50, 55, 65)
+            ToggleCircle:TweenPosition(UDim2.new(0, 2, 0, 2), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.15, true)
+        end
+        if callback then callback(toggled) end
+    end)
+end
+
+local KaitunSection = Instance.new("Frame")
+KaitunSection.Size = UDim2.new(1, 0, 0, 235)
+KaitunSection.Position = UDim2.new(0, 0, 0, 0)
+KaitunSection.BackgroundColor3 = Color3.fromRGB(18, 21, 26)
+KaitunSection.BorderSizePixel = 0
+KaitunSection.Parent = ContentContainer
+Instance.new("UICorner", KaitunSection).CornerRadius = UDim.new(0, 8)
+
+local SectionTitle = Instance.new("TextLabel")
+SectionTitle.Size = UDim2.new(1, -15, 0, 30)
+SectionTitle.Position = UDim2.new(0, 15, 0, 5)
+SectionTitle.BackgroundTransparency = 1
+SectionTitle.Font = Enum.Font.GothamBold
+SectionTitle.Text = "⚡ Kaitun BFVip Control Panel"
+SectionTitle.TextColor3 = Color3.fromRGB(0, 255, 100)
+SectionTitle.TextSize = 12
+SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+SectionTitle.Parent = KaitunSection
+
+_G.Kaitun1ToMax = false
+_G.OrbitFly = false
+_G.BringMobs = false
+_G.AutoStats = false
+_G.AutoCode = false
+_G.StatsPriority = {"Energy", "Health", "Blox Fruit", "Melee", "Defense"}
+
+createToggle(KaitunSection, "Auto Farm Level (1 - Max)", 35, function(state)
+    _G.Kaitun1ToMax = state
+end)
+createToggle(KaitunSection, "Orbit Fly (No Animation)", 75, function(state)
+    _G.OrbitFly = state
+end)
+createToggle(KaitunSection, "Bring Mobs (Gom quái)", 115, function(state)
+    _G.BringMobs = state
+end)
+createToggle(KaitunSection, "Auto Stats (Energy -> Health -> Fruit...)", 155, function(state)
+    _G.AutoStats = state
+end)
+createToggle(KaitunSection, "Auto Redeem Codes (Kiểm tra thời hạn x2)", 195, function(state)
+    _G.AutoCode = state
+end)
+
+VerifyBtn.MouseButton1Click:Connect(function()
+    if KeyBox.Text == CORRECT_KEY then
+        KeySystemFrame:Destroy()
+        MainFrame.Visible = true
+    else
+        StatusLabel.Text = "Status: Invalid Key! Try again."
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+    end
+end)
+
+local orbitAngle = 0
+RunService.RenderStepped:Connect(function(deltaTime)
+    if not _G.OrbitFly and not _G.Kaitun1ToMax then return end
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
+
+    local targetPart = nil
+    local minDist = math.huge
+    local enemiesFolder = workspace:FindFirstChild("Enemies")
+    
+    if enemiesFolder then
+        for _, enemy in ipairs(enemiesFolder:GetChildren()) do
+            local eHrp = enemy:FindFirstChild("HumanoidRootPart")
+            local eHum = enemy:FindFirstChild("Humanoid")
+            if eHrp and eHum and eHum.Health > 0 then
+                local dist = (hrp.Position - eHrp.Position).Magnitude
+                if dist < minDist then
+                    minDist = dist
+                    targetPart = eHrp
+                end
+            end
+        end
+    end
+
+    if targetPart then
+        orbitAngle = orbitAngle + (4 * deltaTime)
+        local offsetX = math.cos(orbitAngle) * 12
+        local offsetZ = math.sin(orbitAngle) * 12
+        local targetPos = targetPart.Position + Vector3.new(offsetX, 7, offsetZ)
+        
+        hrp.CFrame = CFrame.new(targetPos, targetPart.Position)
+        hrp.Velocity = Vector3.new(0, 0, 0)
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.3) do
+        if (_G.BringMobs or _G.Kaitun1ToMax) and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            pcall(function()
+                local hrp = LocalPlayer.Character.HumanoidRootPart
+                local enemiesFolder = workspace:FindFirstChild("Enemies")
+                if enemiesFolder then
+                    for _, enemy in ipairs(enemiesFolder:GetChildren()) do
+                        local eHrp = enemy:FindFirstChild("HumanoidRootPart")
+                        local eHum = enemy:FindFirstChild("Humanoid")
+                        if eHrp and eHum and eHum.Health > 0 then
+                            if (eHrp.Position - hrp.Position).Magnitude < 300 then
+                                eHrp.CFrame = hrp.CFrame * CFrame.new(0, 0, -3)
+                                eHrp.Velocity = Vector3.new(0, 0, 0)
+                                if enemy:FindFirstChild("Head") then
+                                    enemy.Head.CanCollide = false
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+local function requestAddStat(statName, amount)
+    pcall(function()
+        local remotes = ReplicatedStorage:FindFirstChild("Remotes") or ReplicatedStorage
+        local statRemote = remotes:FindFirstChild("CommF_")
+        if statRemote then
+            statRemote:InvokeServer("AddPoint", statName, amount)
+        end
+    end)
+end
+
+task.spawn(function()
+    while task.wait(1) do
+        if _G.AutoStats or _G.Kaitun1ToMax then
+            pcall(function()
+                local dataStats = LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Points")
+                if dataStats and dataStats.Value > 0 then
+                    for _, stat in ipairs(_G.StatsPriority) do
+                        if dataStats.Value > 0 then
+                            requestAddStat(stat, 1)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- Auto Redeem Codes System (Chỉ nhập code khi thời gian x2 EXP chưa có hoặc đã hết hạn)
+task.spawn(function()
+    local bloxCodes = {
+        "ADMIN_STRENGTH", "Sub2Fer999", "Enyu_is_Pro", "Magicbus", "JCWK", 
+        "Starcodeheo", "Bluxxy", "fudd10_v2", "Fudd10", "BIGNEWS", 
+        "TheGreatAce", "Sub2GAMERROBOT_EXP1", "Sub2NoobMaster123", "Sub2DaRock", 
+        "Sub2UncleKizaru", "Sub2Oliveira", "Sub2Immutable", "Sub2OfficialNoobie", 
+        "TantaiGaming", "StrawHatMaine", "Sub2Charming", "Axiore", "SubToDaInmortal"
+    }
+
+    while task.wait(5) do
+        if _G.AutoCode or _G.Kaitun1ToMax then
+            pcall(function()
+                -- Kiểm tra thời gian x2 kinh nghiệm (ExpExpires hoặc các thuộc tính thời gian tương tự trong Data)
+                local dataFolder = LocalPlayer:FindFirstChild("Data")
+                local hasActiveExp = false
+                
+                if dataFolder then
+                    -- Kiểm tra nếu có thông số thời gian x2 EXP còn hạn (ví dụ > 0)
+                    local expTime = dataFolder:FindFirstChild("ExpExpires") or dataFolder:FindFirstChild("DoubleExpTime")
+                    if expTime and expTime.Value and expTime.Value > os.time() then
+                        hasActiveExp = true
+                    end
+                end
+
+                -- Nếu người chơi chưa có thời gian x2 hoặc đã hết thời gian thì mới tiến hành nhập code
+                if not hasActiveExp then
+                    local remotes = ReplicatedStorage:FindFirstChild("Remotes") or ReplicatedStorage
+                    local codeRemote = remotes:FindFirstChild("CommF_")
+                    if codeRemote then
+                        for _, code in ipairs(bloxCodes) do
+                            if not _G.AutoCode and not _G.Kaitun1ToMax then break end
+                            codeRemote:InvokeServer("RedeemCode", code)
+                            task.wait(2.5)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+print("Khang Hub: Loaded successfully!")
