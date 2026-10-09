@@ -1,0 +1,374 @@
+-- V10 X999 Luck Booster Script
+-- Made By MakuScripts
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+if PlayerGui:FindFirstChild("Khang_Dev Luck V10") then
+    PlayerGui.LuckBoosterV9:Destroy()
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "Khang_Dev Luck Boots"
+gui.ResetOnSpawn = false
+gui.Parent = PlayerGui
+
+-- =====================
+--  LOADER
+-- =====================
+
+local loaderBG = Instance.new("Frame")
+loaderBG.Size = UDim2.fromOffset(200, 200)
+loaderBG.Position = UDim2.fromOffset(120, 120)
+loaderBG.BackgroundColor3 = Color3.fromRGB(15, 17, 26)
+loaderBG.BorderSizePixel = 0
+loaderBG.Parent = gui
+Instance.new("UICorner", loaderBG).CornerRadius = UDim.new(0, 12)
+
+local loaderStroke = Instance.new("UIStroke", loaderBG)
+loaderStroke.Color = Color3.fromRGB(44, 47, 66)
+loaderStroke.Thickness = 1
+
+local loaderTitle = Instance.new("TextLabel", loaderBG)
+loaderTitle.Size = UDim2.fromOffset(180, 24)
+loaderTitle.Position = UDim2.fromOffset(10, 30)
+loaderTitle.BackgroundTransparency = 1
+loaderTitle.Text = "Khang_Dev Script"
+loaderTitle.TextColor3 = Color3.fromRGB(252, 196, 34)
+loaderTitle.TextSize = 13
+loaderTitle.Font = Enum.Font.GothamBold
+loaderTitle.TextXAlignment = Enum.TextXAlignment.Center
+loaderTitle.TextWrapped = true
+
+local loaderSub = Instance.new("TextLabel", loaderBG)
+loaderSub.Size = UDim2.fromOffset(180, 14)
+loaderSub.Position = UDim2.fromOffset(10, 50)
+loaderSub.BackgroundTransparency = 1
+loaderSub.Text = "Made By Khang_Dev"
+loaderSub.TextColor3 = Color3.fromRGB(155, 122, 32)
+loaderSub.TextSize = 9
+loaderSub.Font = Enum.Font.Gotham
+loaderSub.TextXAlignment = Enum.TextXAlignment.Center
+
+local spinnerRing = Instance.new("Frame", loaderBG)
+spinnerRing.Size = UDim2.fromOffset(26, 26)
+spinnerRing.Position = UDim2.fromOffset(87, 82)
+spinnerRing.BackgroundTransparency = 1
+Instance.new("UICorner", spinnerRing).CornerRadius = UDim.new(1, 0)
+
+local spinnerStroke = Instance.new("UIStroke", spinnerRing)
+spinnerStroke.Thickness = 2
+spinnerStroke.Color = Color3.fromRGB(44, 47, 66)
+
+local spinnerDot = Instance.new("Frame", spinnerRing)
+spinnerDot.Size = UDim2.fromOffset(6, 6)
+spinnerDot.AnchorPoint = Vector2.new(0.5, 0.5)
+spinnerDot.Position = UDim2.new(0.5, 0, 0, -1)
+spinnerDot.BackgroundColor3 = Color3.fromRGB(252, 196, 34)
+spinnerDot.BorderSizePixel = 0
+Instance.new("UICorner", spinnerDot).CornerRadius = UDim.new(1, 0)
+
+local statusLabel = Instance.new("TextLabel", loaderBG)
+statusLabel.Size = UDim2.fromOffset(180, 14)
+statusLabel.Position = UDim2.fromOffset(10, 116)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Initializing..."
+statusLabel.TextColor3 = Color3.fromRGB(140, 140, 160)
+statusLabel.TextSize = 9
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+local barTrack = Instance.new("Frame", loaderBG)
+barTrack.Size = UDim2.fromOffset(160, 6)
+barTrack.Position = UDim2.fromOffset(20, 134)
+barTrack.BackgroundColor3 = Color3.fromRGB(30, 33, 48)
+barTrack.BorderSizePixel = 0
+Instance.new("UICorner", barTrack).CornerRadius = UDim.new(1, 0)
+
+local barFill = Instance.new("Frame", barTrack)
+barFill.Size = UDim2.fromOffset(0, 6)
+barFill.BackgroundColor3 = Color3.fromRGB(252, 196, 34)
+barFill.BorderSizePixel = 0
+Instance.new("UICorner", barFill).CornerRadius = UDim.new(1, 0)
+
+local barGlow = Instance.new("UIStroke", barFill)
+barGlow.Thickness = 1
+barGlow.Color = Color3.fromRGB(255, 224, 130)
+barGlow.Transparency = 0.4
+
+local pctLabel = Instance.new("TextLabel", loaderBG)
+pctLabel.Size = UDim2.fromOffset(180, 14)
+pctLabel.Position = UDim2.fromOffset(10, 146)
+pctLabel.BackgroundTransparency = 1
+pctLabel.Text = "0%"
+pctLabel.TextColor3 = Color3.fromRGB(252, 196, 34)
+pctLabel.TextSize = 9
+pctLabel.Font = Enum.Font.GothamBold
+pctLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+-- Loader drag hookup
+local loaderDragging, loaderDragStart, loaderStartPos = false, nil, nil
+
+loaderBG.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1
+    or i.UserInputType == Enum.UserInputType.Touch then
+        loaderDragging = true
+        loaderDragStart = i.Position
+        loaderStartPos = loaderBG.Position
+    end
+end)
+
+loaderBG.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1
+    or i.UserInputType == Enum.UserInputType.Touch then
+        loaderDragging = false
+    end
+end)
+
+UIS.InputChanged:Connect(function(i)
+    if not loaderDragging then return end
+    if i.UserInputType ~= Enum.UserInputType.MouseMovement
+    and i.UserInputType ~= Enum.UserInputType.Touch then return end
+    local d = i.Position - loaderDragStart
+    loaderBG.Position = UDim2.fromOffset(
+        loaderStartPos.X.Offset + d.X,
+        loaderStartPos.Y.Offset + d.Y
+    )
+end)
+
+local steps = {
+    { t = 0.8,  label = "Connecting...",      pct = 15  },
+    { t = 1.4,  label = "Loading modules...", pct = 35  },
+    { t = 1.2,  label = "Patching hooks...",  pct = 58  },
+    { t = 1.0,  label = "Verifying build...", pct = 80  },
+    { t = 0.6,  label = "Ready.",             pct = 100 },
+}
+
+-- =====================
+--  MAIN MENU
+-- =====================
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.fromOffset(200, 200)
+frame.Position = UDim2.fromOffset(120, 120)
+frame.BackgroundColor3 = Color3.fromRGB(15, 17, 26)
+frame.BorderSizePixel = 0
+frame.Visible = false
+frame.Parent = gui
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+
+local stroke = Instance.new("UIStroke", frame)
+stroke.Color = Color3.fromRGB(44, 47, 66)
+stroke.Thickness = 1
+
+local header = Instance.new("Frame", frame)
+header.Size = UDim2.fromOffset(200, 48)
+header.Position = UDim2.fromOffset(0, 0)
+header.BackgroundColor3 = Color3.fromRGB(19, 21, 33)
+header.BorderSizePixel = 0
+Instance.new("UICorner", header).CornerRadius = UDim.new(0, 12)
+
+local headerPatch = Instance.new("Frame", header)
+headerPatch.Size = UDim2.fromOffset(200, 12)
+headerPatch.Position = UDim2.fromOffset(0, 36)
+headerPatch.BackgroundColor3 = Color3.fromRGB(19, 21, 33)
+headerPatch.BorderSizePixel = 0
+
+local hdivide = Instance.new("Frame", header)
+hdivide.Size = UDim2.fromOffset(200, 1)
+hdivide.Position = UDim2.fromOffset(0, 47)
+hdivide.BackgroundColor3 = Color3.fromRGB(36, 39, 56)
+hdivide.BorderSizePixel = 0
+
+local title = Instance.new("TextLabel", header)
+title.Size = UDim2.fromOffset(185, 24)
+title.Position = UDim2.fromOffset(10, 3)
+title.BackgroundTransparency = 1
+title.Text = "Khang_Dev Luck V10"
+title.TextColor3 = Color3.fromRGB(252, 196, 34)
+title.TextSize = 12
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.TextWrapped = true
+
+local sub = Instance.new("TextLabel", header)
+sub.Size = UDim2.fromOffset(185, 14)
+sub.Position = UDim2.fromOffset(10, 24)
+sub.BackgroundTransparency = 1
+sub.Text = "Made By Khang_Dev"
+sub.TextColor3 = Color3.fromRGB(155, 122, 32)
+sub.TextSize = 9
+sub.Font = Enum.Font.Gotham
+sub.TextXAlignment = Enum.TextXAlignment.Left
+
+local BODY_Y = 48
+local PAD    = 6
+local GAP    = 5
+local ROW_H  = 43
+
+local rowData = {
+    { name = "X999 Luck",    col = Color3.fromRGB(48, 196, 60)  },
+    { name = "No Cool Down", col = Color3.fromRGB(48, 142, 255) },
+    { name = "Unli Spin",    col = Color3.fromRGB(220, 156, 0)  },
+}
+
+for i, data in ipairs(rowData) do
+    local ypos = BODY_Y + PAD + (i - 1) * (ROW_H + GAP)
+
+    local row = Instance.new("Frame", frame)
+    row.Size = UDim2.fromOffset(184, ROW_H)
+    row.Position = UDim2.fromOffset(8, ypos)
+    row.BackgroundColor3 = Color3.fromRGB(23, 25, 38)
+    row.BorderSizePixel = 0
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+
+    local lbl = Instance.new("TextLabel", row)
+    lbl.Size = UDim2.fromOffset(110, ROW_H)
+    lbl.Position = UDim2.fromOffset(10, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = data.name
+    lbl.TextColor3 = Color3.fromRGB(215, 215, 228)
+    lbl.TextSize = 11
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+
+    local track = Instance.new("Frame", row)
+    track.Size = UDim2.fromOffset(38, 20)
+    track.Position = UDim2.fromOffset(138, 11)
+    track.BorderSizePixel = 0
+    Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+
+    local thumb = Instance.new("Frame", track)
+    thumb.Size = UDim2.fromOffset(14, 14)
+    thumb.BorderSizePixel = 0
+    thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    thumb.ZIndex = 2
+    Instance.new("UICorner", thumb).CornerRadius = UDim.new(1, 0)
+
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.fromOffset(184, ROW_H)
+    btn.BackgroundTransparency = 1
+    btn.Text = ""
+    btn.ZIndex = 3
+
+    local on = false
+    local function set(state)
+        if state then
+            track.BackgroundColor3 = data.col
+            thumb.Position = UDim2.fromOffset(21, 3)
+        else
+            track.BackgroundColor3 = Color3.fromRGB(44, 47, 66)
+            thumb.Position = UDim2.fromOffset(3, 3)
+        end
+    end
+    set(on)
+
+    btn.MouseButton1Click:Connect(function()
+        on = not on
+        set(on)
+    end)
+end
+
+-- Main menu drag
+local dragging, dragStart, startPos = false, nil, nil
+
+header.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1
+    or i.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = i.Position
+        startPos = frame.Position
+    end
+end)
+
+header.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1
+    or i.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+UIS.InputChanged:Connect(function(i)
+    if not dragging then return end
+    if i.UserInputType ~= Enum.UserInputType.MouseMovement
+    and i.UserInputType ~= Enum.UserInputType.Touch then return end
+    local d = i.Position - dragStart
+    frame.Position = UDim2.fromOffset(
+        startPos.X.Offset + d.X,
+        startPos.Y.Offset + d.Y
+    )
+end)
+
+-- =====================
+--  RUN LOADER
+-- =====================
+
+local spinning = true
+task.spawn(function()
+    local radius = 13
+    local center = Vector2.new(13, 13)
+    local angle = 0
+    while spinning do
+        angle = angle + 0.35
+        local x = center.X + radius * math.cos(angle)
+        local y = center.Y + radius * math.sin(angle)
+        spinnerDot.Position = UDim2.fromOffset(x, y)
+        task.wait()
+    end
+end)
+
+task.spawn(function()
+    for _, step in ipairs(steps) do
+        task.wait(step.t)
+        statusLabel.Text = step.label
+        TweenService:Create(barFill,
+            TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            { Size = UDim2.fromOffset(math.floor(160 * step.pct / 100), 6) }
+        ):Play()
+        pctLabel.Text = step.pct .. "%"
+    end
+
+    spinning = false
+    task.wait(0.4)
+
+    TweenService:Create(loaderBG,
+        TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        { BackgroundTransparency = 1 }
+    ):Play()
+    for _, v in ipairs(loaderBG:GetDescendants()) do
+        if v:IsA("TextLabel") then
+            TweenService:Create(v, TweenInfo.new(0.3), { TextTransparency = 1 }):Play()
+        elseif v:IsA("Frame") then
+            TweenService:Create(v, TweenInfo.new(0.3), { BackgroundTransparency = 1 }):Play()
+        elseif v:IsA("UIStroke") then
+            TweenService:Create(v, TweenInfo.new(0.3), { Transparency = 1 }):Play()
+        end
+    end
+
+    task.wait(0.35)
+    loaderBG:Destroy()
+
+    frame.Visible = true
+    frame.BackgroundTransparency = 1
+    for _, v in ipairs(frame:GetDescendants()) do
+        if v:IsA("TextLabel") then v.TextTransparency = 1 end
+        if v:IsA("Frame") then v.BackgroundTransparency = 1 end
+        if v:IsA("UIStroke") then v.Transparency = 1 end
+    end
+
+    TweenService:Create(frame,
+        TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        { BackgroundTransparency = 0 }
+    ):Play()
+    for _, v in ipairs(frame:GetDescendants()) do
+        if v:IsA("TextLabel") then
+            TweenService:Create(v, TweenInfo.new(0.4), { TextTransparency = 0 }):Play()
+        elseif v:IsA("Frame") then
+            TweenService:Create(v, TweenInfo.new(0.4), { BackgroundTransparency = 0 }):Play()
+        elseif v:IsA("UIStroke") then
+            TweenService:Create(v, TweenInfo.new(0.4), { Transparency = 0 }):Play()
+        end
+    end
+end)
