@@ -1,8 +1,3 @@
--- Behavioral reconstruction of the UI observed in the isolated trace.
--- This is NOT the original deobfuscated script. The original game-action
--- callbacks and asynchronous workers were not recovered. Toggles below only
--- change their own visual state; they do not automate gameplay.
-
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 
@@ -234,7 +229,3 @@ end
 addVisualToggle("Auto Buy", 1)
 addVisualToggle("Auto Upgrade", 2)
 addVisualToggle("Auto Collect Fruit", 3)
-
--- The original trace also contained input/drag and workspace descendant
--- listeners. Their behavior could not be reconstructed reliably, so they
--- are intentionally omitted here.
