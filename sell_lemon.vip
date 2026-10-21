@@ -1,0 +1,231 @@
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+
+local COLORS = {
+    background = Color3.fromRGB(10, 10, 22),
+    panel = Color3.fromRGB(25, 25, 45),
+    panelStroke = Color3.fromRGB(45, 45, 75),
+    muted = Color3.fromRGB(120, 120, 160),
+    text = Color3.fromRGB(220, 220, 220),
+    white = Color3.fromRGB(255, 255, 255),
+    accent = Color3.fromRGB(100, 40, 200),
+    off = Color3.fromRGB(255, 80, 80),
+    on = Color3.fromRGB(100, 220, 100),
+}
+
+local function addCorner(parent, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius)
+    corner.Parent = parent
+    return corner
+end
+
+local function addStroke(parent, color, thickness)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = color
+    stroke.Thickness = thickness or 1
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Parent = parent
+    return stroke
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "Khang_Dev Script"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = CoreGui
+
+local window = Instance.new("Frame")
+window.Name = "Window"
+window.Size = UDim2.new(0, 280, 0, 420)
+window.Position = UDim2.new(0.5, -140, 0.5, -210)
+window.BackgroundColor3 = COLORS.background
+window.BorderSizePixel = 0
+window.Parent = screenGui
+addCorner(window, 8)
+addStroke(window, COLORS.panelStroke, 1.2)
+
+local header = Instance.new("Frame")
+header.Name = "Header"
+header.Size = UDim2.new(1, 0, 0, 36)
+header.BackgroundColor3 = COLORS.panel
+header.BorderSizePixel = 0
+header.Parent = window
+addCorner(header, 6)
+
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Size = UDim2.new(1, -50, 1, 0)
+title.Position = UDim2.new(0, 14, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Khang_Dev"
+title.TextColor3 = COLORS.white
+title.TextSize = 15
+title.Font = Enum.Font.GothamSemibold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = header
+
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "Close"
+closeButton.Size = UDim2.new(0, 24, 0, 24)
+closeButton.Position = UDim2.new(1, -32, 0.5, -12)
+closeButton.BackgroundColor3 = COLORS.off
+closeButton.Text = "✕"
+closeButton.TextColor3 = COLORS.white
+closeButton.TextSize = 12
+closeButton.BorderSizePixel = 0
+closeButton.Parent = header
+addCorner(closeButton, 12)
+closeButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+local tabBar = Instance.new("Frame")
+tabBar.Name = "Tabs"
+tabBar.Size = UDim2.new(1, -12, 0, 32)
+tabBar.Position = UDim2.new(0, 6, 0, 44)
+tabBar.BackgroundColor3 = COLORS.background
+tabBar.BorderSizePixel = 0
+tabBar.Parent = window
+addCorner(tabBar, 8)
+
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.Padding = UDim.new(0, 3)
+tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabLayout.Parent = tabBar
+
+local content = Instance.new("Frame")
+content.Name = "Content"
+content.Size = UDim2.new(1, -12, 1, -90)
+content.Position = UDim2.new(0, 6, 0, 82)
+content.BackgroundTransparency = 1
+content.Parent = window
+
+local tabNames = { "Main", "2", "3", "4" }
+local pages = {}
+local tabButtons = {}
+local activeTab = "Main"
+
+for index, tabName in ipairs(tabNames) do
+    local page = Instance.new("Frame")
+    page.Name = tabName .. "Page"
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.BackgroundTransparency = 1
+    page.Visible = index == 1
+    page.Parent = content
+    pages[tabName] = page
+
+    local button = Instance.new("TextButton")
+    button.Name = tabName:gsub("%s", "") .. "Tab"
+    button.Size = UDim2.new(0, 50, 0, 24)
+    button.BackgroundColor3 = index == 1 and COLORS.accent or COLORS.background
+    button.Text = tabName
+    button.TextColor3 = index == 1 and COLORS.white or COLORS.muted
+    button.TextSize = 10
+    button.TextScaled = false
+    button.Font = Enum.Font.Gotham
+    button.BorderSizePixel = 0
+    button.LayoutOrder = index
+    button.Parent = tabBar
+    addCorner(button, 6)
+    tabButtons[tabName] = button
+end
+
+local function selectTab(tabName)
+    activeTab = tabName
+
+    for name, page in pairs(pages) do
+        local selected = name == activeTab
+        page.Visible = selected
+
+        local button = tabButtons[name]
+        local targetColor = selected and COLORS.accent or COLORS.background
+
+        TweenService:Create(button, TweenInfo.new(0.15), {
+            BackgroundColor3 = targetColor,
+        }):Play()
+
+        button.TextColor3 = selected and COLORS.white or COLORS.muted
+    end
+end
+
+for _, tabName in ipairs(tabNames) do
+    tabButtons[tabName].MouseButton1Click:Connect(function()
+        selectTab(tabName)
+    end)
+end
+
+local mainPage = pages.Main
+
+local optionLayout = Instance.new("UIListLayout")
+optionLayout.Padding = UDim.new(0, 8)
+optionLayout.SortOrder = Enum.SortOrder.LayoutOrder
+optionLayout.Parent = mainPage
+
+local function addVisualToggle(labelText, order)
+    local row = Instance.new("Frame")
+    row.Name = labelText:gsub("%s", "") .. "Row"
+    row.Size = UDim2.new(1, 0, 0, 36)
+    row.BackgroundColor3 = COLORS.panel
+    row.BorderSizePixel = 0
+    row.LayoutOrder = order
+    row.Parent = mainPage
+    addCorner(row, 6)
+    addStroke(row, COLORS.panelStroke, 1.2)
+
+    local label = Instance.new("TextLabel")
+    label.Name = "Label"
+    label.Size = UDim2.new(1, -70, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = labelText
+    label.TextColor3 = COLORS.text
+    label.TextSize = 13
+    label.Font = Enum.Font.GothamSemibold
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = row
+
+    local toggle = Instance.new("TextButton")
+    toggle.Name = "Toggle"
+    toggle.Size = UDim2.new(0, 42, 0, 22)
+    toggle.Position = UDim2.new(1, -54, 0.5, -11)
+    toggle.BackgroundColor3 = COLORS.background
+    toggle.Text = ""
+    toggle.AutoButtonColor = false
+    toggle.Parent = row
+    addCorner(toggle, 11)
+
+    local outline = addStroke(toggle, COLORS.off, 1.5)
+
+    local knob = Instance.new("Frame")
+    knob.Name = "Knob"
+    knob.Size = UDim2.new(0, 16, 0, 16)
+    knob.Position = UDim2.new(0, 3, 0.5, -8)
+    knob.BackgroundColor3 = COLORS.off
+    knob.BorderSizePixel = 0
+    knob.Parent = toggle
+    addCorner(knob, 8)
+
+    local enabled = false
+
+    toggle.MouseButton1Click:Connect(function()
+        enabled = not enabled
+
+        local color = enabled and COLORS.on or COLORS.off
+        local xOffset = enabled and 23 or 3
+
+        outline.Color = color
+
+        TweenService:Create(knob, TweenInfo.new(0.15), {
+            Position = UDim2.new(0, xOffset, 0.5, -8),
+            BackgroundColor3 = color,
+        }):Play()
+
+        -- Original action behind this toggle was not recovered.
+    end)
+end
+
+addVisualToggle("Auto Buy", 1)
+addVisualToggle("Auto Upgrade", 2)
+addVisualToggle("Auto Collect Fruit", 3)
