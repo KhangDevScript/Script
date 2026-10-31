@@ -1,7 +1,7 @@
 -- ==========================================
--- STEAL AN EGG & PET DUPE - RAYFIELD UI GEN2 (FIXED)
+-- STEAL AN EGG & PET DUPE - RAYFIELD GEN2 (STABLE)
 -- Author: AI Assistant
--- Version: 2.1
+-- Version: 3.0 (Gen2 Compatible)
 -- ==========================================
 
 local Players = game:GetService("Players")
@@ -67,7 +67,7 @@ function FindRemoteEvents()
         FoundEvents.Pet = searchContainer(ReplicatedStorage, "Pet")
     end
     
-    -- Sửa logic cảnh báo: Chỉ báo khi CẢ HAI đều không tìm thấy
+    -- Log cảnh báo
     if not FoundEvents.Egg and not FoundEvents.Pet then
         print("[SCRIPT] Cảnh báo: Không tìm thấy Event rõ ràng.")
     elseif not FoundEvents.Egg then
@@ -80,7 +80,7 @@ end
 FindRemoteEvents()
 
 -- ==========================================
--- PHẦN 2: KHỞI TẠO RAYFIELD UI
+-- PHẦN 2: KHỞI TẠO RAYFIELD UI (GEN2)
 -- ==========================================
 
 local success, rayfield = pcall(function()
@@ -92,13 +92,13 @@ if not success then
     return
 end
 
--- Tạo Window (Đã sửa lỗi SetTheme)
+-- Tạo Window
 local window = rayfield:CreateWindow({
     Name = "Steal An Egg Dupe",
     Icon = 0, 
     LoadingTitle = "Đang tải menu...",
-    LoadingSubtitle = "Sirsuis Menu v2.0",
-    Theme = "Default", -- Dùng chuỗi thay vì hàm phức tạp
+    LoadingSubtitle = "Sirsuis Menu v3.0",
+    Theme = "Default", 
     ConfigName = "StealAnEggConfig",
     FocusOnOpen = true,
     ClickThroughPrompt = "Click để bỏ qua",
@@ -115,20 +115,20 @@ local tab = window:CreateTab("Dupe Menu", 4476392845)
 local function performDupes(remoteEvent, labelObj)
     if not remoteEvent then
         if labelObj then
-            labelObj.Text = "EVENT NOT FOUND!"
+            labelObj:SetText("EVENT NOT FOUND!")
             task.wait(2)
-            labelObj.Text = "Ready"
+            labelObj:SetText("Ready")
         end
         return
     end
 
     if labelObj then
-        labelObj.Text = "Spamming..."
+        labelObj:SetText("Spamming...")
     end
     
     for i = 1, MaxAttempts do
         if labelObj then
-            labelObj.Text = string.format("Spam: %d/%d", i, MaxAttempts)
+            labelObj:SetText(string.format("Spam: %d/%d", i, MaxAttempts))
         end
         
         remoteEvent:FireServer()
@@ -136,20 +136,20 @@ local function performDupes(remoteEvent, labelObj)
     end
     
     if labelObj then
-        labelObj.Text = "Done!"
+        labelObj:SetText("Done!")
         task.wait(1)
-        labelObj.Text = "Ready"
+        labelObj:SetText("Ready")
     end
 end
 
 -- ==========================================
--- PHẦN 4: TẠO CÁC NHÓN GIAO DIỆN
+-- PHẦN 4: TẠO CÁC NHÓN GIAO DIỆN (FIXED STRUCTURE)
 -- ==========================================
 
 -- Nhóm Egg
-local group_egg = tab:CreateGroup("EGG DUPE")
+tab:CreateGroup("EGG DUPE")
 
-group_egg:Button({
+tab:Button({
     Name = "DUPE EGG",
     Callback = function()
         performDupes(FoundEvents.Egg, nil)
@@ -158,15 +158,15 @@ group_egg:Button({
 
 -- Hiển thị trạng thái Egg
 if FoundEvents.Egg then
-    group_egg:Label("Trạng thái: " .. FoundEvents.Egg.Name)
+    tab:Label("Trạng thái: " .. FoundEvents.Egg.Name)
 else
-    group_egg:Label("Trạng thái: Chưa tìm thấy Egg Event")
+    tab:Label("Trạng thái: Chưa tìm thấy Egg Event")
 end
 
 -- Nhóm Pet
-local group_pet = tab:CreateGroup("PET DUPE")
+tab:CreateGroup("PET DUPE")
 
-group_pet:Button({
+tab:Button({
     Name = "DUPE PET",
     Callback = function()
         performDupes(FoundEvents.Pet, nil)
@@ -175,9 +175,9 @@ group_pet:Button({
 
 -- Hiển thị trạng thái Pet
 if FoundEvents.Pet then
-    group_pet:Label("Trạng thái: " .. FoundEvents.Pet.Name)
+    tab:Label("Trạng thái: " .. FoundEvents.Pet.Name)
 else
-    group_pet:Label("Trạng thái: Chưa tìm thấy Pet Event")
+    tab:Label("Trạng thái: Chưa tìm thấy Pet Event")
 end
 
 -- Thông báo khi chạy xong
