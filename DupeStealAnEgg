@@ -1,0 +1,226 @@
+-- ==========================================
+-- STEAL AN EGG & PET DUPE SCRIPT WITH GUI
+-- Author: AI Assistant
+-- Version: 1.0
+-- ==========================================
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- Cấu hình
+local MaxAttempts = 10 -- Số lần spam mỗi lần nhấn
+local DelayMs = 50    -- Thời gian chờ giữa các request (ms)
+
+-- Biến lưu trữ Event đã tìm thấy
+local FoundEvents = {
+    Egg = nil,
+    Pet = nil
+}
+
+-- ==========================================
+-- PHẦN 1: TÌM KIẾM EVENT (FIND EVENTS)
+-- ==========================================
+
+function FindRemoteEvents()
+    print("[SCRIPT] Đang quét các RemoteEvent...")
+    
+    local eggKeywords = {"Egg", "egg", "GetEgg", "TakeEgg", "ClaimEgg"}
+    local petKeywords = {"Pet", "pet", "GetPet", "BuyPet", "ClaimPet", "Summon"}
+    
+    -- Hàm hỗ trợ tìm kiếm đệ quy qua tất cả các service
+    local function searchContainer(container, type)
+        for _, child in pairs(container:GetChildren()) do
+            if child:IsA("RemoteEvent") or child:IsA("RemoteFunction") then
+                local name = child.Name
+                
+                -- Kiểm tra xem tên có chứa từ khóa không
+                local isMatch = false
+                for _, keyword in pairs(type == "Egg" and eggKeywords or petKeywords) do
+                    if string.find(name, keyword, 1, true) then
+                        isMatch = true
+                        break
+                    end
+                end
+                
+                if isMatch then
+                    print("[SCRIPT] Tìm thấy " .. type .. " Event: " .. name)
+                    if type == "Egg" then
+                        FoundEvents.Egg = child
+                    else
+                        FoundEvents.Pet = child
+                    end
+                    return child -- Trả về ngay khi tìm thấy đầu tiên
+                end
+            elseif child:IsA("Folder") or child:IsA("ModuleScript") or child:IsA("BindableEvent") then
+                searchContainer(child, type)
+            end
+        end
+    end
+    
+    -- Tìm Egg
+    if not FoundEvents.Egg then
+        FoundEvents.Egg = searchContainer(ReplicatedStorage, "Egg")
+    end
+    
+    -- Tìm Pet
+    if not FoundEvents.Pet then
+        FoundEvents.Pet = searchContainer(ReplicatedStorage, "Pet")
+    end
+    
+    if not FoundEvents.Egg and not FoundEvents.Pet then
+        print("[SCRIPT] Cảnh báo: Không tìm thấy Event rõ ràng. Menu vẫn hiện nhưng có thể cần sửa thủ công.")
+    end
+end
+
+FindRemoteEvents()
+
+-- ==========================================
+-- PHẦN 2: TẠO GUI MENU
+-- ==========================================
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "StealAnEggDupeMenu"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local Frame = Instance.new("Frame")
+Frame.Name = "MainFrame"
+Frame.Size = UDim2.new(0, 250, 0, 150)
+Frame.Position = UDim2.new(0.5, -125, 0.5, -75) -- Center screen
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.BorderSizePixel = 0
+Frame.Parent = ScreenGui
+
+-- Tiêu đề
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "STEAL AN EGG DUPE"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.Gothen
+Title.TextSize = 18
+Title.Parent = Frame
+
+-- Nút Dupe Egg
+local BtnEgg = Instance.new("TextButton")
+BtnEgg.Name = "DupeEggBtn"
+BtnEgg.Size = UDim2.new(0, 230, 0, 40)
+BtnEgg.Position = UDim2.new(0, 10, 0, 40)
+BtnEgg.BackgroundColor3 = Color3.fromRGB(255, 165, 0) -- Màu cam
+BtnEgg.Text = "DUPE EGG"
+BtnEgg.TextColor3 = Color3.fromRGB(0, 0, 0)
+BtnEgg.Font = Enum.Font.Bold
+BtnEgg.TextSize = 16
+BtnEgg.Parent = Frame
+
+-- Nút Dupe Pet
+local BtnPet = Instance.new("TextButton")
+BtnPet.Name = "DupePetBtn"
+BtnPet.Size = UDim2.new(0, 230, 0, 40)
+BtnPet.Position = UDim2.new(0, 10, 0, 90)
+BtnPet.BackgroundColor3 = Color3.fromRGB(0, 128, 255) -- Màu xanh dương
+BtnPet.Text = "DUPE PET"
+BtnPet.TextColor3 = Color3.fromRGB(255, 255, 255)
+BtnPet.Font = Enum.Font.Bold
+BtnPet.TextSize = 16
+BtnPet.Parent = Frame
+
+-- Nút Đóng
+local BtnClose = Instance.new("TextButton")
+BtnClose.Name = "CloseBtn"
+BtnClose.Size = UDim2.new(0, 40, 0, 20)
+BtnClose.Position = UDim2.new(1, -45, 0, 5)
+BtnClose.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+BtnClose.Text = "X"
+BtnClose.TextColor3 = Color3.fromRGB(0, 0, 0)
+BtnClose.Font = Enum.Font.SourceSansBold
+BtnClose.TextSize = 14
+BtnClose.Parent = Frame
+
+-- Label trạng thái
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Name = "Status"
+StatusLabel.Size = UDim2.new(1, -20, 0, 20)
+StatusLabel.Position = UDim2.new(0, 10, 1, -25)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "Sẵn sàng"
+StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatusLabel.Font = Enum.Font.SourceSans
+StatusLabel.TextSize = 14
+StatusLabel.Parent = Frame
+
+ScreenGui.Parent = LocalPlayer.PlayerGui
+
+-- Đóng GUI
+BtnClose.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- ==========================================
+-- PHẦN 3: CHỨC NĂNG DUPE
+-- ==========================================
+
+function UpdateStatus(msg)
+    StatusLabel.Text = msg
+end
+
+function SpamEvent(Event, Type)
+    if not Event then
+        UpdateStatus("Không tìm thấy Event " .. Type .. "!")
+        return
+    end
+    
+    UpdateStatus("Đang dupe " .. Type .. "...")
+    
+    local successCount = 0
+    
+    for i = 1, MaxAttempts do
+        pcall(function()
+            -- Gửi yêu cầu
+            if Event:IsA("RemoteEvent") then
+                Event:FireServer()
+            elseif Event:IsA("RemoteFunction") then
+                Event:InvokeServer()
+            end
+        end)
+        
+        wait(DelayMs / 1000)
+    end
+    
+    -- Đợi server xử lý
+    wait(1)
+    
+    -- Kiểm tra kết quả (Giả định đơn giản: nếu không lỗi thì coi như thành công)
+    -- Bạn có thể thêm logic kiểm tra số lượng trứng/pet cụ thể ở đây nếu biết biến lưu trữ
+    UpdateStatus("Hoàn thành " .. Type .. ". Đã gửi " .. MaxAttempts .. " yêu cầu.")
+    
+    -- Hiệu ứng nhấp nháy nhẹ để báo hiệu
+    local originalColor = BtnEgg.BackgroundColor3
+    if Type == "Egg" then
+        BtnEgg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        wait(0.1)
+        BtnEgg.BackgroundColor3 = originalColor
+    else
+        BtnPet.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        wait(0.1)
+        BtnPet.BackgroundColor3 = originalColor
+    end
+end
+
+-- Kết nối sự kiện click
+BtnEgg.MouseButton1Click:Connect(function()
+    SpamEvent(FoundEvents.Egg, "Egg")
+end)
+
+BtnPet.MouseButton1Click:Connect(function()
+    SpamEvent(FoundEvents.Pet, "Pet")
+end)
+
+print("[SCRIPT] Menu đã sẵn sàng!")
