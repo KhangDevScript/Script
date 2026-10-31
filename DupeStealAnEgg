@@ -1,7 +1,7 @@
 -- ==========================================
--- STEAL AN EGG & PET DUPE - RAYFIELD UI GEN2
+-- STEAL AN EGG & PET DUPE - RAYFIELD UI GEN2 (FIXED)
 -- Author: AI Assistant
--- Version: 2.0
+-- Version: 2.1
 -- ==========================================
 
 local Players = game:GetService("Players")
@@ -67,8 +67,13 @@ function FindRemoteEvents()
         FoundEvents.Pet = searchContainer(ReplicatedStorage, "Pet")
     end
     
+    -- Sửa logic cảnh báo: Chỉ báo khi CẢ HAI đều không tìm thấy
     if not FoundEvents.Egg and not FoundEvents.Pet then
         print("[SCRIPT] Cảnh báo: Không tìm thấy Event rõ ràng.")
+    elseif not FoundEvents.Egg then
+        print("[SCRIPT] Cảnh báo: Không tìm thấy Egg Event.")
+    elseif not FoundEvents.Pet then
+        print("[SCRIPT] Cảnh báo: Không tìm thấy Pet Event.")
     end
 end
 
@@ -87,13 +92,13 @@ if not success then
     return
 end
 
--- Tạo Window
+-- Tạo Window (Đã sửa lỗi SetTheme)
 local window = rayfield:CreateWindow({
     Name = "Steal An Egg Dupe",
-    Icon = 0, -- Bạn có thể thay bằng ID icon nếu muốn
+    Icon = 0, 
     LoadingTitle = "Đang tải menu...",
     LoadingSubtitle = "Sirsuis Menu v2.0",
-    Theme = rayfield:SetTheme(1), -- 1: Default, 2: Dark, v.v.
+    Theme = "Default", -- Dùng chuỗi thay vì hàm phức tạp
     ConfigName = "StealAnEggConfig",
     FocusOnOpen = true,
     ClickThroughPrompt = "Click để bỏ qua",
@@ -101,13 +106,13 @@ local window = rayfield:CreateWindow({
 })
 
 -- Tạo Tab chính
-local tab = window:CreateTab("Dupe Menu", 4476392845) -- Icon mặc định của Rayfield
+local tab = window:CreateTab("Dupe Menu", 4476392845) 
 
 -- ==========================================
 -- PHẦN 3: LOGIC SPAM & ACTION
 -- ==========================================
 
-local function performDupes(remoteEvent, btnObj, labelObj)
+local function performDupes(remoteEvent, labelObj)
     if not remoteEvent then
         if labelObj then
             labelObj.Text = "EVENT NOT FOUND!"
@@ -147,11 +152,16 @@ local group_egg = tab:CreateGroup("EGG DUPE")
 group_egg:Button({
     Name = "DUPE EGG",
     Callback = function()
-        performDupes(FoundEvents.Egg, nil, nil)
+        performDupes(FoundEvents.Egg, nil)
     end
 })
 
-group_egg:Label("Trạng thái: " .. (FoundEvents.Egg and "Tìm thấy" or "Chưa tìm thấy"))
+-- Hiển thị trạng thái Egg
+if FoundEvents.Egg then
+    group_egg:Label("Trạng thái: " .. FoundEvents.Egg.Name)
+else
+    group_egg:Label("Trạng thái: Chưa tìm thấy Egg Event")
+end
 
 -- Nhóm Pet
 local group_pet = tab:CreateGroup("PET DUPE")
@@ -159,13 +169,18 @@ local group_pet = tab:CreateGroup("PET DUPE")
 group_pet:Button({
     Name = "DUPE PET",
     Callback = function()
-        performDupes(FoundEvents.Pet, nil, nil)
+        performDupes(FoundEvents.Pet, nil)
     end
 })
 
-group_pet:Label("Trạng thái: " .. (FoundEvents.Pet and "Tìm thấy" or "Chưa tìm thấy"))
+-- Hiển thị trạng thái Pet
+if FoundEvents.Pet then
+    group_pet:Label("Trạng thái: " .. FoundEvents.Pet.Name)
+else
+    group_pet:Label("Trạng thái: Chưa tìm thấy Pet Event")
+end
 
--- Thông báo khi chạy xong (Optional)
+-- Thông báo khi chạy xong
 window:Notify({
     Title = "Rayfield Loaded",
     Content = "Menu Steal An Egg đã sẵn sàng.",
